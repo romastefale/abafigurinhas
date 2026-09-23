@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import secrets
+import sqlite3
 import subprocess
 import tempfile
 import urllib.error
@@ -21,6 +22,12 @@ log = logging.getLogger("app")
 logging.basicConfig(level=logging.INFO)
 data = {}
 emojis = ("😀", "😂", "😍", "😎", "🥳", "🤩", "😜", "🤖", "🔥", "✨", "💫", "🎉", "❤️", "👍", "👀", "🌟")
+volume = os.getenv("RAILWAY_VOLUME_MOUNT_PATH")
+if not volume:
+    raise RuntimeError("Conecte um Volume Railway montado em /data para salvar os pacotes")
+db = sqlite3.connect(Path(volume) / "packs.sqlite3")
+db.execute("CREATE TABLE IF NOT EXISTS packs (user_id INTEGER NOT NULL, name TEXT NOT NULL, title TEXT NOT NULL, PRIMARY KEY (user_id, name))")
+db.commit()
 
 
 class Error(Exception):
@@ -59,7 +66,8 @@ def call(method, body=None, upload=None, timeout=35):
 
 def user(uid):
     if uid not in data:
-        data[uid] = {"packs": [], "file": None, "mode": None, "intent": None, "src": None}
+        packs = db.execute("SELECT name, title FROM packs WHERE user_id = ? ORDER BY rowid", (uid,)).fetchall()
+        data[uid] = {"packs": [{"name": name, "title": title} for name, title in packs], "file": None, "mode": None, "intent": None, "src": None}
     return data[uid]
 
 
@@ -87,10 +95,18 @@ def notice(chat, text):
 
 
 def menu(uid):
-    rows = ["<h3>Figurinha pronta</h3><p>Onde você quer adicioná-la?</p>"]
-    for i, pack in enumerate(user(uid)["packs"]):
-        rows.append(f'<tg-button-row><tg-button type="callback_data" style="danger" data="p:{i}">{html.escape(pack["title"])}</tg-button></tg-button-row>')
-    rows.append('<tg-button-row><tg-button type="callback_data" style="danger" data="p:other">Pacote existente</tg-button><tg-button type="callback_data" style="danger" data="p:new">Novo pacote</tg-button></tg-button-row>')
+    return '<h3>Figurinha pronta</h3><p>Onde você quer adicioná-la?</p><tg-button-row><tg-button type="callback_data" style="danger" data="p:other">Pacote existente</tg-button><tg-button type="callback_data" style="danger" data="p:new">Novo pacote</tg-button></tg-button-row>'
+
+
+def pack_menu(uid):
+    packs = user(uid)["packs"]
+    rows = ["<h3>Escolha o pacote</h3>"]
+    for i, pack in enumerate(packs):
+        rows.append(f'<tg-button-row><tg-button type="callback_data" style="success" data="p:{i}">{html.escape(pack["title"])}</tg-button></tg-button-row>')
+    if packs:
+        rows.append('<tg-button-row><tg-button type="callback_data" style="danger" data="p:manual">Outro pacote</tg-button></tg-button-row>')
+    else:
+        rows.append("<p>Envie o link ou o nome do pacote existente.</p>")
     return "".join(rows)
 
 
@@ -114,6 +130,8 @@ def remember(uid, name, title):
     packs = user(uid)["packs"]
     packs[:] = [pack for pack in packs if pack["name"] != name]
     packs.append({"name": name, "title": title})
+    db.execute("INSERT INTO packs (user_id, name, title) VALUES (?, ?, ?) ON CONFLICT(user_id, name) DO UPDATE SET title = excluded.title", (uid, name, title))
+    db.commit()
 
 
 def media(message):
@@ -164,7 +182,7 @@ def sticker(fid, kind):
 def audio(fid):
     root = Path(tempfile.mkdtemp())
     src = download(fid, root)
-    out = root / "audio.mp3"
+    out = root / "audio.ogg"
     check = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(src)], capture_output=True, text=True)
     if check.returncode != 0:
         src.unlink()
@@ -174,7 +192,7 @@ def audio(fid):
         src.unlink()
         root.rmdir()
         raise Error("O vídeo precisa ter até 2 minutos.")
-    run = subprocess.run(["ffmpeg", "-y", "-i", str(src), "-vn", "-c:a", "libmp3lame", "-b:a", "192k", str(out)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    run = subprocess.run(["ffmpeg", "-y", "-i", str(src), "-vn", "-c:a", "libopus", "-b:a", "96k", "-ac", "1", "-ar", "48000", "-application", "audio", "-f", "ogg", str(out)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     src.unlink()
     if run.returncode != 0 or not out.exists():
         if out.exists():
@@ -188,8 +206,8 @@ def send_sticker(chat, path):
     return call("sendSticker", {"chat_id": chat}, ("sticker", path, "video/webm"))
 
 
-def send_audio(chat, path):
-    return call("sendAudio", {"chat_id": chat}, ("audio", path, "audio/mpeg"))
+def send_voice(chat, path):
+    return call("sendVoice", {"chat_id": chat}, ("voice", path, "audio/ogg"))
 
 
 def get_set(name):
@@ -269,7 +287,7 @@ def receive_media(message):
             raise Error("Envie um vídeo para converter em áudio.")
         status = send(chat, "<p><i>Extraindo áudio...</i></p>")
         path = audio(fid)
-        send_audio(chat, path)
+        send_voice(chat, path)
         path.unlink()
         path.parent.rmdir()
         edit(chat, status["message_id"], "<p><b>Áudio pronto.</b></p>")
@@ -292,7 +310,7 @@ def choose_action(query):
     if query["data"] == "a:a":
         edit(chat, mid, "<p><i>Extraindo áudio...</i></p>")
         path = audio(fid)
-        send_audio(chat, path)
+        send_voice(chat, path)
         path.unlink()
         path.parent.rmdir()
         edit(chat, mid, "<p><b>Áudio pronto.</b></p>")
@@ -314,11 +332,16 @@ def choose_pack(query):
         raise Error("Envie a mídia novamente.")
     if value == "new":
         user(uid)["mode"] = "new"
-        send(chat, "<h3>Novo pacote</h3><p>Envie o nome que você quer usar.</p>")
+        edit(chat, message["message_id"], "<h3>Novo pacote</h3><p>Envie o nome que você quer usar.</p>")
         return
     if value == "other":
+        packs = user(uid)["packs"]
+        user(uid)["mode"] = "select" if packs else "other"
+        edit(chat, message["message_id"], pack_menu(uid))
+        return
+    if value == "manual":
         user(uid)["mode"] = "other"
-        send(chat, "<h3>Pacote existente</h3><p>Envie o link ou o nome do pacote.</p>")
+        edit(chat, message["message_id"], "<h3>Outro pacote</h3><p>Envie o link ou o nome do pacote.</p>")
         return
     packs = user(uid)["packs"]
     if not value.isdigit() or int(value) >= len(packs):
@@ -342,6 +365,12 @@ def receive_text(message, bot):
         raise Error("Envie uma imagem, GIF ou vídeo.")
     if not user(uid)["file"]:
         raise Error("Envie a mídia novamente.")
+    if mode == "select":
+        if not text.isdigit() or int(text) >= len(user(uid)["packs"]):
+            raise Error("Escolha um pacote nos botões da mensagem.")
+        link = add(uid, user(uid)["packs"][int(text)]["name"])
+        notice(chat, f"Adicionada: {link}")
+        return
     if mode == "other":
         name = pack_id(text)
         if not name:
