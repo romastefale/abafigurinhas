@@ -94,6 +94,12 @@ def notice(chat, text):
     return send(chat, f"<p>{html.escape(text)}</p>")
 
 
+def pack_notice(chat, label, title, name):
+    link = f"https://t.me/addstickers/{name}"
+    text = f'{html.escape(label)}: <a href="{html.escape(link, quote=True)}">{html.escape(title)}</a>'
+    return call("sendMessage", {"chat_id": chat, "text": text, "parse_mode": "HTML", "link_preview_options": {"url": link, "is_disabled": False, "prefer_large_media": True}})
+
+
 def menu(uid):
     return '<h3>Figurinha pronta</h3><p>Onde você quer adicioná-la?</p><tg-button-row><tg-button type="callback_data" style="danger" data="p:other">Pacote existente</tg-button><tg-button type="callback_data" style="danger" data="p:new">Novo pacote</tg-button></tg-button-row>'
 
@@ -346,8 +352,9 @@ def choose_pack(query):
     packs = user(uid)["packs"]
     if not value.isdigit() or int(value) >= len(packs):
         raise Error("Envie a mídia novamente.")
-    link = add(uid, packs[int(value)]["name"])
-    notice(chat, f"Adicionada: {link}")
+    pack = packs[int(value)]
+    add(uid, pack["name"])
+    pack_notice(chat, "Adicionada", pack["title"], pack["name"])
 
 
 def receive_text(message, bot):
@@ -368,8 +375,9 @@ def receive_text(message, bot):
     if mode == "select":
         if not text.isdigit() or int(text) >= len(user(uid)["packs"]):
             raise Error("Escolha um pacote nos botões da mensagem.")
-        link = add(uid, user(uid)["packs"][int(text)]["name"])
-        notice(chat, f"Adicionada: {link}")
+        pack = user(uid)["packs"][int(text)]
+        add(uid, pack["name"])
+        pack_notice(chat, "Adicionada", pack["title"], pack["name"])
         return
     if mode == "other":
         name = pack_id(text)
@@ -377,15 +385,15 @@ def receive_text(message, bot):
             raise Error("Envie o link ou o nome do pacote.")
         item = get_set(name)
         remember(uid, item["name"], item["title"])
-        link = add(uid, name)
-        notice(chat, f"Adicionada: {link}")
+        add(uid, name)
+        pack_notice(chat, "Adicionada", item["title"], item["name"])
         return
     title = user(uid)["title"] + " " + text if mode == "word" else text
     link = create(uid, title, bot)
     if not link:
         notice(chat, "A primeira palavra já existe. Envie apenas a segunda palavra.")
         return
-    notice(chat, f"Pacote criado: {link}")
+    pack_notice(chat, "Pacote criado", title[:64], link.rsplit("/", 1)[-1])
 
 
 def handle(update, bot):
