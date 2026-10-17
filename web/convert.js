@@ -1,19 +1,19 @@
 // Conversão no aparelho: nada sai do celular até a figurinha estar pronta.
 // Imagem -> WebP/PNG 512x512 (até 512 KB). Vídeo -> WebM VP9 512x512, sem áudio, até 3 s e 256 KB.
-// O contorno (retangular, arredondado, squircle) vira transparência nos cantos.
+// O contorno (square, rounded, squircle) vira transparência nos cantos.
 import {
   Input, Output, Conversion, BlobSource, BufferTarget, WebMOutputFormat, ALL_FORMATS, canEncodeVideo,
 } from "./vendor/mediabunny.min.mjs";
 
-export const LADO = 512;
-export const MAX_ESTATICA = 512 * 1024;
-export const MAX_VIDEO = 256 * 1024;
+const LADO = 512;
+const MAX_ESTATICA = 512 * 1024;
+const MAX_VIDEO = 256 * 1024;
 const ALVO_VIDEO = 240 * 1024; // folga para o contêiner e variação do controle de taxa
 const MAX_SEGUNDOS = 3;
 const RAIO_ARREDONDADO = 0.14 * LADO; // 14% do lado
 const EXPOENTE_SQUIRCLE = 4; // |x|^4 + |y|^4 = 1
 
-export const FORMAS = ["retangular", "arredondado", "squircle"];
+export const FORMAS = ["square", "rounded", "squircle"];
 
 export class ErroDeConversao extends Error {}
 
@@ -27,7 +27,7 @@ export async function podeGerarVideo() {
 
 // Contorno como Path2D no quadrado LADO x LADO; null = sem recorte (cantos vivos, opaco).
 export function contorno(forma) {
-  if (forma === "arredondado") {
+  if (forma === "rounded") {
     const r = RAIO_ARREDONDADO, l = LADO, p = new Path2D();
     p.moveTo(r, 0);
     p.arcTo(l, 0, l, l, r);
@@ -49,6 +49,18 @@ export function contorno(forma) {
     return p;
   }
   return null;
+}
+
+// Mesma curva do contorno, em coordenadas 0..1 (para o clip-path da prévia).
+export function caminhoSquirclePrevia() {
+  const n = EXPOENTE_SQUIRCLE, passos = 180, pontos = [];
+  for (let i = 0; i < passos; i++) {
+    const t = (i / passos) * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t);
+    const x = 0.5 + Math.sign(c) * Math.pow(Math.abs(c), 2 / n) * 0.5;
+    const y = 0.5 + Math.sign(s) * Math.pow(Math.abs(s), 2 / n) * 0.5;
+    pontos.push(`${i ? "L" : "M"}${x.toFixed(4)} ${y.toFixed(4)}`);
+  }
+  return `${pontos.join("")}Z`;
 }
 
 const canvasPara = (bmp, forma) => {
@@ -78,7 +90,7 @@ function quantizar(canvas, bits) {
   g.putImageData(img, 0, 0);
 }
 
-export async function converterImagem(arquivo, forma = "retangular") {
+export async function converterImagem(arquivo, forma = "square") {
   let bmp;
   try {
     bmp = await createImageBitmap(arquivo, { imageOrientation: "from-image" });
@@ -142,7 +154,7 @@ async function codificar(arquivo, bitrate, fim, forma, aoProgredir) {
   return output.target.buffer;
 }
 
-export async function converterVideo(arquivo, forma = "retangular", aoProgredir = () => {}) {
+export async function converterVideo(arquivo, forma = "square", aoProgredir = () => {}) {
   if (!(await podeGerarVideo())) {
     throw new ErroDeConversao("Este aparelho não consegue gerar figurinha de vídeo. Imagens funcionam.");
   }
