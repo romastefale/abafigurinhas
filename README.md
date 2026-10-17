@@ -15,6 +15,8 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
 | `.github/workflows/deploy.yml` | GitHub Actions | A cada push em `main`: `fetch`, `push`, `migrate --safe`, `webhook`. |
 
+Contorno (escolhido na tela): **retangular** (cantos vivos), **arredondado** (raio de 14% do lado) ou **squircle** (superelipse |x|⁴+|y|⁴=1). Fora do contorno a figurinha fica transparente (WebP/PNG com alpha; WebM VP9 com alpha).
+
 Conversões (todas no aparelho):
 - **Imagem** → WebP (ou PNG, se o navegador não codifica WebP) 512×512, até 512 KB.
 - **Vídeo** → WebM VP9 512×512, sem áudio, até 3 s e 256 KB, com ajuste automático de taxa.

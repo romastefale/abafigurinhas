@@ -1,6 +1,6 @@
 // Mini App: escolhe o arquivo, converte no aparelho e envia ao endpoint `addSticker`.
 // Nada aqui fala com GitHub ou com servidor próprio: só com o serverless do bot.
-import { converterImagem, converterVideo, ehVideo, podeGerarVideo, ErroDeConversao, MAX_VIDEO } from "./convert.js";
+import { converterImagem, converterVideo, ehVideo, podeGerarVideo, ErroDeConversao, FORMAS } from "./convert.js";
 
 const tg = window.Telegram?.WebApp;
 const $ = (s) => document.querySelector(s);
@@ -13,6 +13,7 @@ let figurinha = null; // { blob, mime, tipo, url }
 let pacotes = [];
 let ocupado = false;
 let ultimoLink = "";
+let forma = "retangular";
 
 // ── Telegram: tema e cores da barra ───────────────────────────────────────────
 function aplicarTema() {
@@ -47,6 +48,24 @@ function chamar(nome, entrada) {
 }
 const mensagemDe = (e) => (e && e.message) || "Algo deu errado.";
 
+// ── Contorno ──────────────────────────────────────────────────────────────────
+try {
+  const salvo = localStorage.getItem("forma");
+  if (FORMAS.includes(salvo)) forma = salvo;
+} catch {}
+function marcarForma() {
+  for (const b of document.querySelectorAll("#forma button")) b.setAttribute("aria-checked", String(b.dataset.forma === forma));
+}
+marcarForma();
+$("#forma").addEventListener("click", (e) => {
+  const botao = e.target.closest("button[data-forma]");
+  if (!botao || botao.dataset.forma === forma) return;
+  forma = botao.dataset.forma;
+  try { localStorage.setItem("forma", forma); } catch {}
+  marcarForma();
+  if (figurinha && !ocupado) converter(); // já convertida: refaz com o novo contorno
+});
+
 // ── Escolha do arquivo ────────────────────────────────────────────────────────
 const escolher = () => $("#arquivo").click();
 $("#anexar").addEventListener("click", escolher);
@@ -76,8 +95,12 @@ function limparFigurinha() {
 }
 
 // ── Conversão ─────────────────────────────────────────────────────────────────
-$("#form").addEventListener("submit", async (e) => {
+$("#form").addEventListener("submit", (e) => {
   e.preventDefault();
+  converter();
+});
+
+async function converter() {
   if (!arquivo || ocupado) return;
   ocupado = true;
   limparFigurinha();
@@ -85,10 +108,10 @@ $("#form").addEventListener("submit", async (e) => {
   try {
     if (ehVideo(arquivo)) {
       dica("Convertendo vídeo… 0%");
-      figurinha = await converterVideo(arquivo, (p) => dica(`Convertendo vídeo… ${Math.min(99, Math.round(p * 100))}%`));
+      figurinha = await converterVideo(arquivo, forma, (p) => dica(`Convertendo vídeo… ${Math.min(99, Math.round(p * 100))}%`));
     } else {
       dica("Convertendo imagem…");
-      figurinha = await converterImagem(arquivo);
+      figurinha = await converterImagem(arquivo, forma);
     }
     figurinha.url = URL.createObjectURL(figurinha.blob);
     mostrarPrevia();
@@ -103,7 +126,7 @@ $("#form").addEventListener("submit", async (e) => {
   } finally {
     ocupado = false;
   }
-});
+}
 st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hidden));
 
 function mostrarPrevia() {

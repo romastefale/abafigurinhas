@@ -188,7 +188,7 @@ body{min-height:var(--vh);place-items:start center;padding-top:max(8px,env(safe-
 .pill-bar{height:3em;border-radius:1.5em}
 .page-search{padding-left:.9em}
 .lupa{top:.4375em;right:.4375em}.colar{top:.4375em;right:2.9375em}
-.moldura{--hmax:max(7em,calc(var(--vh) - 20.2em))}
+.moldura{--hmax:max(7em,calc(var(--vh) - 23.4em))}
 .btn{min-height:max(42px,2.6em);padding:.6em 1.2em}
 
 /* ── Teclado aberto (nome do pacote) ────────────────────────────────────────
@@ -197,6 +197,19 @@ body{min-height:var(--vh);place-items:start center;padding-top:max(8px,env(safe-
 html.editando h1,html.editando .dica,html.editando .moldura,html.editando #destino-bar,
 html.editando .pill-bar.com-colar{display:none}
 html.editando body{padding-top:max(10px,env(safe-area-inset-top))}
+/* ── Contorno da figurinha ──────────────────────────────────────────────── */
+:root{--sel:rgba(255,255,255,.55)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sel:rgba(255,255,255,.16)}}
+:root[data-theme="dark"]{--sel:rgba(255,255,255,.16)}
+.forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;padding:.2em;border-radius:1.5em}
+.forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:2.3em;padding:0 .2em;border:0;border-radius:1.3em;
+  background:transparent;color:var(--bar-sub);font-size:.78em;font-weight:400;letter-spacing:-.02em;transition:background .2s ease,color .2s ease}
+.forma button svg{width:1.3em;height:1.3em;flex:0 0 auto}
+.forma button span{white-space:nowrap}
+.forma button[aria-checked="true"]{background:var(--sel);color:var(--bar-text);font-weight:700;box-shadow:0 1px 4px rgba(30,20,90,.12)}
+/* a prévia mostra o contorno de verdade: sem cantos arredondados fixos */
+.previa{border-radius:0}
+html.editando #forma{display:none}
 </style>
 </head>
 <body>
@@ -226,6 +239,15 @@ html.editando body{padding-top:max(10px,env(safe-area-inset-top))}
     </button>
   </div>
   <input type="file" id="arquivo" accept="image/*,video/*" hidden>
+
+  <div class="forma frost" id="forma" role="radiogroup" aria-label="Contorno da figurinha">
+    <button type="button" role="radio" aria-checked="true" data-forma="retangular">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg><span>retangular</span></button>
+    <button type="button" role="radio" aria-checked="false" data-forma="arredondado">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg><span>arredondado</span></button>
+    <button type="button" role="radio" aria-checked="false" data-forma="squircle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c6.6 0 8.5 1.9 8.5 8.5s-1.9 8.5-8.5 8.5-8.5-1.9-8.5-8.5S5.4 3.5 12 3.5Z"/></svg><span>squircle</span></button>
+  </div>
 
   <p class="dica" id="dica" hidden></p>
   <p class="motivo" id="motivo" role="alert" hidden></p>
