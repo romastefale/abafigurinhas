@@ -50,18 +50,21 @@ jobs:
             exit 1
           fi
 
+      # CLI oficial @tgcloud/cli instalado localmente (versão fixa + lockfile).
+      # Os comandos abaixo usam `npm run`, que só enxerga node_modules/.bin e
+      # nunca baixa nada do registro (ao contrário de `npx`).
       - run: npm ci
 
       # O estado local (.tgcloud/) não existe no runner; `fetch` baixa o estado
       # da nuvem para que o `push` saiba em qual revisão está se baseando.
       - name: Sincronizar estado da nuvem
-        run: npx --no-install tgcloud fetch
+        run: npm run fetch
 
       - name: Mudanças a publicar
-        run: npx --no-install tgcloud status
+        run: npm run status
 
       - name: Publicar módulos
-        run: npx --no-install tgcloud push
+        run: npm run deploy
 
       # `migrate` sem flag exige terminal interativo. Em CI usamos --safe
       # (aplica só mudanças aditivas e ignora as destrutivas).
@@ -69,10 +72,10 @@ jobs:
         run: |
           mode="${{ github.event.inputs.migrate_mode || 'safe' }}"
           case "$mode" in
-            yes)      npx --no-install tgcloud migrate --yes ;;
-            dry-run)  npx --no-install tgcloud migrate --dry-run ;;
-            *)        npx --no-install tgcloud migrate --safe ;;
+            yes)      npm run migrate -- --yes ;;
+            dry-run)  npm run migrate -- --dry-run ;;
+            *)        npm run migrate -- --safe ;;
           esac
 
       - name: Estado do webhook
-        run: npx --no-install tgcloud webhook
+        run: npm run webhook

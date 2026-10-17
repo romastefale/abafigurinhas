@@ -5,11 +5,14 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@tgcloud/cli": "^0.2.0"
+    "@tgcloud/cli": "0.2.0"
   },
   "scripts": {
     "deploy": "tgcloud push",
     "status": "tgcloud status",
-    "run": "tgcloud run"
+    "run": "tgcloud run",
+    "fetch": "tgcloud fetch",
+    "migrate": "tgcloud migrate",
+    "webhook": "tgcloud webhook"
   }
 }
