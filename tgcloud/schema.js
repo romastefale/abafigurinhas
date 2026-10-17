@@ -1,10 +1,13 @@
-import { table, integer, text } from 'sdk/db';
+import { table, integer, text, uniqueIndex, sql } from 'sdk/db';
 
-// Your database tables go here as named exports. Deploying this file registers the
-// schema; applying the changes (a migration) updates the database.
-
-// Uncomment to define your first table:
-// export const users = table('users', {
-//   id:   integer('id').primaryKey({ autoIncrement: true }),
-//   name: text('name').notNull(),
-// });
+// Pacotes de figurinhas de cada usuário. Sem chave estrangeira: userId é só uma coluna.
+export const packs = table('packs', {
+  id:      integer('id').primaryKey({ autoIncrement: true }),
+  userId:  integer('user_id').notNull(),
+  name:    text('name').notNull(),      // nome curto do pacote (t.me/addstickers/<name>)
+  title:   text('title').notNull(),
+  format:  text('format').notNull(),    // static | video
+  created: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+}, (t) => ({
+  userNameIdx: uniqueIndex('uidx_packs_user_name').on(t.userId, t.name),
+}));

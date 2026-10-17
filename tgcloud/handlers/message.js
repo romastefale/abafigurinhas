@@ -1,13 +1,14 @@
-// handlers/message.js — runs on each `message` update. The file name is the
-// Telegram update type; the platform calls the default export with the matching
-// payload (here, a Message). The full update is available as `ctx.update`.
-
+// Toda a conversão acontece no Mini App; o chat só leva o usuário até ele.
 import { api } from 'sdk';
+import { MINI_APP_URL } from '../lib/config.js';
 
-export default async function (message, ctx) {
-  // Echo the text back — replace with your own logic.
-  await api.sendMessage({
-    chat_id: message.chat.id,
-    text: `You said: ${message.text ?? '(no text)'}`,
-  });
+const TEXT = 'Para fazer uma figurinha, abra o app: escolha uma imagem ou vídeo, ele converte no seu aparelho e adiciona ao seu pacote.';
+
+export default async function (message) {
+  if (message.chat.type !== 'private') return;
+  const body = { chat_id: message.chat.id, text: TEXT };
+  if (MINI_APP_URL) {
+    body.reply_markup = { inline_keyboard: [[{ text: 'Abrir o app', web_app: { url: MINI_APP_URL } }]] };
+  }
+  await api.sendMessage(body);
 }

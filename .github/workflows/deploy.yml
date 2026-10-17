@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - "tgcloud/**"
+      - "web/**"
       - "tgcloud.jsonc"
       - "package.json"
       - "package-lock.json"
