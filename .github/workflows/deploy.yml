@@ -1,0 +1,82 @@
+name: Deploy (Telegram Serverless)
+
+# Fonte da verdade: este repositório. Cada push em main que altera o código
+# do bot publica os módulos (`tgcloud push`) e aplica migrações seguras.
+# Requer o secret TGCLOUD_TOKEN (BotFather → bot → Serverless → CLI Access →
+# Access token, no formato app<id>:<secret>). NÃO é o token da Bot API.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tgcloud/**"
+      - "web/**"
+      - "tgcloud.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+    inputs:
+      migrate_mode:
+        description: "Migração do banco: safe (só aditivas), yes (aplica também drops), dry-run (só mostra)"
+        type: choice
+        options: [safe, yes, dry-run]
+        default: safe
+
+concurrency:
+  group: tgcloud-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verificar secret
+        run: |
+          if [ -z "$TGCLOUD_TOKEN" ]; then
+            echo "::error::Defina o secret TGCLOUD_TOKEN (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      # CLI oficial @tgcloud/cli instalado localmente (versão fixa + lockfile).
+      # Os comandos abaixo usam `npm run`, que só enxerga node_modules/.bin e
+      # nunca baixa nada do registro (ao contrário de `npx`).
+      - run: npm ci
+
+      # O estado local (.tgcloud/) não existe no runner; `fetch` baixa o estado
+      # da nuvem para que o `push` saiba em qual revisão está se baseando.
+      - name: Sincronizar estado da nuvem
+        run: npm run fetch
+
+      - name: Mudanças a publicar
+        run: npm run status
+
+      - name: Publicar módulos
+        run: npm run deploy
+
+      # `migrate` sem flag exige terminal interativo. Em CI usamos --safe
+      # (aplica só mudanças aditivas e ignora as destrutivas).
+      - name: Migrar banco
+        run: |
+          mode="${{ github.event.inputs.migrate_mode || 'safe' }}"
+          case "$mode" in
+            yes)      npm run migrate -- --yes ;;
+            dry-run)  npm run migrate -- --dry-run ;;
+            *)        npm run migrate -- --safe ;;
+          esac
+
+      - name: Estado do webhook
+        run: npm run webhook

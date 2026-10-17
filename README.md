@@ -1,2 +1,42 @@
-# abafigurinhas
-@abafo packs
+# abafo
+
+Bot de figurinhas para Telegram, 100% **Telegram Serverless** (sem servidor, sem Railway, sem Actions no caminho do usuário).
+
+O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por isso a conversão acontece **no aparelho**, dentro de um Mini App hospedado pelo próprio serverless; o resultado (já em formato de figurinha) vai para um *endpoint*, que o entrega ao Bot API.
+
+## Como funciona
+
+| Parte | Onde | O que faz |
+|---|---|---|
+| `web/` | Mini App (hospedado em `https://app<id>.tgcloud.ai/`) | Escolhe imagem/vídeo, converte com WebCodecs ([Mediabunny](https://mediabunny.dev)) e mostra a prévia. Visual adaptado da página do `romastefale/realista`. |
+| `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente. |
+| `tgcloud/endpoints/getPacks.js` | serverless | Lista os pacotes do usuário. |
+| `tgcloud/handlers/message.js` | serverless | No chat, só leva o usuário ao app. |
+| `tgcloud/schema.js` | serverless | Tabela `packs`. |
+| `.github/workflows/deploy.yml` | GitHub Actions | A cada push em `main`: `fetch`, `push`, `migrate --safe`, `webhook`. |
+
+Conversões (todas no aparelho):
+- **Imagem** → WebP (ou PNG, se o navegador não codifica WebP) 512×512, até 512 KB.
+- **Vídeo** → WebM VP9 512×512, sem áudio, até 3 s e 256 KB, com ajuste automático de taxa.
+
+## Montar (uma vez)
+
+1. No [@BotFather](https://t.me/BotFather): bot → **Serverless** → ligar. Em **CLI Access**, copie o *Access token* (`app<id>:<secret>`; não é o token da Bot API).
+2. No GitHub: Settings → Secrets and variables → Actions → secret **`TGCLOUD_TOKEN`** com esse valor.
+3. Faça merge na `main` (ou Actions → *Deploy* → Run workflow). O passo `push` imprime o endereço do Mini App.
+4. No BotFather, use esse endereço como **Menu Button** / Mini App do bot e coloque-o em `tgcloud/lib/config.js` (`MINI_APP_URL`) para o `/start` mostrar o botão.
+
+Outros comandos (sempre com o CLI local, nunca `npx tgcloud` fora do projeto):
+
+```bash
+npm ci
+npm run status                    # o que mudou
+npm run run -- endpoints/getPacks '{}' --ctx '{ initData: { user: { id: 1 } } }'
+```
+
+## Limitações
+
+- Vídeo depende de WebCodecs com VP9 no WebView do Telegram. O app detecta e avisa quando o aparelho não suporta (imagens continuam funcionando).
+- Entrada de vídeo depende do que o aparelho decodifica (MP4/H.264 e MOV costumam funcionar em celulares). `.gif` puro não é lido; envie como vídeo.
+- Sem conversão de vídeo em áudio (não há como encodar Opus de forma confiável no WebView).
+- Pacotes antigos do bot anterior não migram sozinhos: use "Pacote existente por link".
