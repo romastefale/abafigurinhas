@@ -51,6 +51,18 @@ export function contorno(forma) {
   return null;
 }
 
+// Mesma curva do contorno, em coordenadas 0..1 (para o clip-path da prévia).
+export function caminhoSquirclePrevia() {
+  const n = EXPOENTE_SQUIRCLE, passos = 180, pontos = [];
+  for (let i = 0; i < passos; i++) {
+    const t = (i / passos) * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t);
+    const x = 0.5 + Math.sign(c) * Math.pow(Math.abs(c), 2 / n) * 0.5;
+    const y = 0.5 + Math.sign(s) * Math.pow(Math.abs(s), 2 / n) * 0.5;
+    pontos.push(`${i ? "L" : "M"}${x.toFixed(4)} ${y.toFixed(4)}`);
+  }
+  return `${pontos.join("")}Z`;
+}
+
 const canvasPara = (bmp, forma) => {
   const c = document.createElement("canvas");
   c.width = c.height = LADO;

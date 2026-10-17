@@ -1,10 +1,11 @@
 // Mini App: escolhe o arquivo, converte no aparelho e envia ao endpoint `addSticker`.
 // Nada aqui fala com GitHub ou com servidor próprio: só com o serverless do bot.
-import { converterImagem, converterVideo, ehVideo, podeGerarVideo, ErroDeConversao, FORMAS } from "./convert.js";
+import { converterImagem, converterVideo, ehVideo, podeGerarVideo, ErroDeConversao, FORMAS, caminhoSquirclePrevia } from "./convert.js";
 
 const tg = window.Telegram?.WebApp;
 const $ = (s) => document.querySelector(s);
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
+$("#clip-squircle-d").setAttribute("d", caminhoSquirclePrevia());
 const NOVO = "novo";
 const EXISTENTE = "existente";
 
@@ -114,6 +115,7 @@ async function converter() {
       figurinha = await converterImagem(arquivo, forma);
     }
     figurinha.url = URL.createObjectURL(figurinha.blob);
+    figurinha.forma = forma;
     mostrarPrevia();
     await prepararDestino();
     dica("");
@@ -132,6 +134,7 @@ st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hid
 function mostrarPrevia() {
   const moldura = $("#moldura");
   moldura.style.setProperty("--ratio", "1");
+  moldura.dataset.forma = figurinha.forma;
   if (figurinha.tipo === "video") {
     moldura.classList.add("video");
     $("#video").src = figurinha.url;
@@ -227,8 +230,16 @@ function base64(buffer) {
   return btoa(texto);
 }
 
+// Sai do modo de digitação na hora (o blur nem sempre dispara quando o campo some ou o teclado fecha).
+function sairDaEdicao() {
+  clearTimeout(saiuDoCampo);
+  $("#campo").blur();
+  raiz.classList.remove("editando");
+}
+
 async function enviar(destino) {
   if (!figurinha || ocupado) return;
+  sairDaEdicao();
   ocupado = true;
   estado("carregando");
   dica("Enviando…");
@@ -236,7 +247,7 @@ async function enviar(destino) {
     const entrada = { ...destino, mime: figurinha.mime, data: base64(await figurinha.blob.arrayBuffer()) };
     const r = await chamar("addSticker", entrada);
     ultimoLink = r.link;
-    dica(r.created ? `Pacote “${r.title}” criado.` : `Adicionada a “${r.title}”.`);
+    dica(""); // o botão "Abrir pacote" já confirma
     $("#destino-bar").hidden = true;
     $("#campo-bar").hidden = true;
     $("#abrir").hidden = false;

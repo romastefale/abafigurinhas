@@ -26,7 +26,7 @@
 <title>abafigurinhas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 <style>
 /* ── Fundo: só CSS, proporcional à tela ─────────────────────────────────────
    Camada fixa de 100lvh (a viewport grande): não muda de tamanho quando a
@@ -106,14 +106,14 @@ html::after{background:var(--campos);
 body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;
   padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
   color:var(--text);background-color:transparent;
-  font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-font-smoothing:antialiased}
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 .frost{background:var(--vidro-tint);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost)}
 
 .card{font-size:var(--u);width:min(38.75em,100%);border-radius:1.875em;padding:2.125em 1.375em 1.625em;box-shadow:var(--glass-float);
   display:grid;gap:1.375em;justify-items:center}
-.card h1{margin:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:1.75em;font-weight:700;letter-spacing:-.03em;color:var(--bar-text);white-space:nowrap}
+.card h1{margin:0;font-family:inherit;font-size:1.75em;font-weight:700;letter-spacing:-.022em;color:var(--bar-text);white-space:nowrap}
 .pill-bar{position:relative;width:100%;height:3.25em;border-radius:1.625em}
 .page-search{position:absolute;inset:0 3.06em 0 0;display:flex;align-items:center;gap:.125em;padding:0 0 0 1em;color:var(--bar-text)}
 .page-search input{flex:1;min-width:0;height:2.5em;border:0;outline:0;background:transparent;padding:0;
@@ -182,37 +182,42 @@ button{font:inherit;cursor:pointer}
    Tudo acompanha essa altura: o cartão é mais justo, fica no topo e a prévia
    encolhe para o resto caber sem rolar (ou rolando pouco). */
 :root{--vh:var(--tg-viewport-stable-height,100svh)}
-body{min-height:var(--vh);place-items:start center;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+body{min-height:var(--vh);place-items:center;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
 .card{padding:1.25em 1.1em 1.1em;gap:.8em;border-radius:1.6em}
 .card h1{font-size:1.4em}
 .pill-bar{height:3em;border-radius:1.5em}
 .page-search{padding-left:.9em}
 .lupa{top:.4375em;right:.4375em}.colar{top:.4375em;right:2.9375em}
 .moldura{--hmax:max(7em,calc(var(--vh) - 19.8em))}
-.btn{min-height:max(42px,2.6em);padding:.6em 1.2em}
+.downloads{width:100%}
+.btn{flex:1;justify-content:center;height:calc(3 * var(--u));min-height:0;padding:0 1.2em;border-radius:calc(1.5 * var(--u))}
 
 /* ── Teclado aberto (nome do pacote) ────────────────────────────────────────
    Enquanto o campo tem foco, some o que não ajuda a digitar; sobram o campo e o
    botão, que cabem na área acima do teclado. */
 html.editando h1,html.editando .dica,html.editando .moldura,html.editando #destino-bar,
 html.editando .pill-bar.com-colar{display:none}
-html.editando body{padding-top:max(10px,env(safe-area-inset-top))}
+html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:start center}
 /* ── Contorno da figurinha ──────────────────────────────────────────────── */
 :root{--sel:rgba(255,255,255,.55)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sel:rgba(255,255,255,.16)}}
 :root[data-theme="dark"]{--sel:rgba(255,255,255,.16)}
-.forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;padding:.2em;border-radius:1.5em}
-.forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:2.3em;padding:0 .2em;border:0;border-radius:1.3em;
-  background:transparent;color:var(--bar-sub);font-size:.78em;font-weight:400;letter-spacing:-.02em;transition:background .2s ease,color .2s ease}
+.forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;height:3em;padding:.25em;border-radius:1.5em}
+.forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:100%;padding:0 .2em;border:0;border-radius:1.25em;
+  background:transparent;color:var(--bar-sub);font-size:.8em;font-weight:500;letter-spacing:-.01em;transition:background .2s ease,color .2s ease}
 .forma button svg{width:1.3em;height:1.3em;flex:0 0 auto}
 .forma button span{white-space:nowrap}
-.forma button[aria-checked="true"]{background:var(--sel);color:var(--bar-text);font-weight:700;box-shadow:0 1px 4px rgba(30,20,90,.12)}
+.forma button[aria-checked="true"]{background:var(--sel);color:var(--bar-text);font-weight:600;box-shadow:0 1px 4px rgba(30,20,90,.12)}
 /* a prévia mostra o contorno de verdade: sem cantos arredondados fixos */
 .previa{border-radius:0}
+/* O iOS não desenha a transparência do WebM na prévia (cantos pretos): recorta no contorno. */
+.moldura[data-forma="arredondado"] .previa{border-radius:14%}
+.moldura[data-forma="squircle"] .previa{clip-path:url(#clip-squircle)}
 html.editando #forma{display:none}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><clipPath id="clip-squircle" clipPathUnits="objectBoundingBox"><path id="clip-squircle-d" d=""/></clipPath></svg>
 <main class="card frost">
   <h1>abafigurinhas</h1>
 
