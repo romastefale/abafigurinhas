@@ -180,12 +180,6 @@ body{min-height:var(--vh);place-items:center;padding-top:max(8px,env(safe-area-i
 .moldura{--hmax:max(7em,calc(var(--vh) - 19.8em))}
 .btn{width:100%;justify-content:center;height:calc(3 * var(--u));min-height:0;padding:0 1.2em;border-radius:calc(1.5 * var(--u))}
 
-/* ── Teclado aberto (nome do pacote) ────────────────────────────────────────
-   Enquanto o campo tem foco, some o que não ajuda a digitar; sobram o campo e o
-   botão, que cabem na área acima do teclado. */
-html.editando h1,html.editando .dica,html.editando .moldura,html.editando #destino-bar,
-html.editando #arquivo-bar{display:none}
-html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:start center}
 /* ── Contorno da figurinha ──────────────────────────────────────────────── */
 .forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;height:3em;padding:.25em;border-radius:1.5em}
 .forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:100%;padding:0 .2em;border:0;border-radius:calc(1.25 * var(--u));
@@ -198,7 +192,6 @@ html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:st
 /* O iOS não desenha a transparência do WebM na prévia (cantos pretos): recorta no contorno. */
 .moldura[data-forma="rounded"] .previa{border-radius:14%}
 .moldura[data-forma="squircle"] .previa{clip-path:url(#clip-squircle)}
-html.editando #forma{display:none}
 </style>
 </head>
 <body>

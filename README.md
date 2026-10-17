@@ -9,7 +9,7 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | Parte | Onde | O que faz |
 |---|---|---|
 | `web/` | Mini App (hospedado em `https://app<id>.tgcloud.ai/`) | Escolhe imagem/vídeo, converte com WebCodecs ([Mediabunny](https://mediabunny.dev)) e mostra a prévia. Visual adaptado da página do `romastefale/realista`. |
-| `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente e avisa no chat com uma única mensagem rica ("Pacote criado" / "Pacote atualizado" + o link do pacote). |
+| `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente e avisa no chat com uma única mensagem rica ("Pacote criado" / "Pacote atualizado" + o nome do pacote como hiperlink para o pacote), com a prévia do link. |
 | `tgcloud/endpoints/getPacks.js` | serverless | Lista os pacotes do usuário. |
 | `tgcloud/handlers/message.js` | serverless | No chat, responde com uma mensagem rica (`sendRichMessage`, Bot API 10.1) e um botão verde (Bot API 10.3) que abre o app; se o Telegram recusar a mensagem rica, cai para texto simples. |
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
@@ -49,4 +49,8 @@ Ao digitar o nome de um pacote, o app esconde o título, a prévia e o seletor, 
 - Sem conversão de vídeo em áudio (não há como encodar Opus de forma confiável no WebView).
 - A lista de pacotes vem da tabela `packs` (só os criados pelo app) e é conferida no Telegram a cada abertura com `getStickerSet`: pacotes que o Bot API não devolve ficam fora da lista (nada é apagado da tabela), o formato mostrado é o real (`is_video`/`is_animated`) e pacotes com 120 figurinhas aparecem desabilitados como "(cheio)". Nenhuma dessas decisões depende do texto de um erro, que a documentação não garante.
 - O app só enxerga os pacotes criados por ele. Pacotes de versões anteriores do bot não aparecem e não há como adicioná-los por link.
-- O Bot API não oferece prévia de link para mensagens ricas (`sendRichMessage` não tem `link_preview_options`); o link do pacote vai como URL no texto.
+- A prévia do link vem de `editMessageText`, o único método do Bot API que aceita `rich_message` junto de `link_preview_options`: o bot envia a mensagem rica e edita essa mesma mensagem (continua sendo uma só). Se a edição falhar, a mensagem com o hiperlink permanece. O Telegram mostra o aviso "Abrir este link?" ao tocar num link embutido.
+
+## Proteção dos dados
+
+Os pacotes dos usuários ficam na tabela `packs` e sobrevivem a qualquer deploy: segundo o documento do Serverless, o deploy nunca toca no banco, o `migrate --safe` só aplica mudanças aditivas e apagar algo do `schema.js` não apaga a tabela. Para que nenhum commit coloque isso em risco, o workflow roda `npm run check:schema` (barra schema sem a tabela/colunas de `packs` ou com `.deprecated()`) e não oferece a opção `--yes` do `migrate`.
