@@ -24,8 +24,7 @@ function aplicarTema() {
   } catch {}
 }
 try {
-  tg?.ready();
-  tg?.expand();
+  tg?.ready(); // sem expand(): respeita o modo compacto (meia altura)
   aplicarTema();
   tg?.onEvent?.("themeChanged", aplicarTema);
 } catch {}
@@ -151,6 +150,26 @@ function atualizarCampo() {
   campo.inputMode = v === EXISTENTE ? "url" : "text";
 }
 $("#destino").addEventListener("change", atualizarCampo);
+
+// ── Teclado: enquanto digita, só o campo e o botão ficam visíveis ─────────────
+const raiz = document.documentElement;
+let saiuDoCampo = 0;
+const mostrarCampo = () => $("#campo").scrollIntoView({ block: "center", behavior: "smooth" });
+$("#campo").addEventListener("focus", () => {
+  clearTimeout(saiuDoCampo);
+  raiz.classList.add("editando");
+  mostrarCampo();
+});
+$("#campo").addEventListener("blur", () => {
+  // atraso: tocar em "Adicionar" tira o foco antes do clique; o layout só volta depois dele
+  saiuDoCampo = setTimeout(() => raiz.classList.remove("editando"), 300);
+});
+$("#campo").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); $("#campo").blur(); $("#adicionar").click(); }
+});
+// o teclado muda a altura visível: recentraliza o campo
+tg?.onEvent?.("viewportChanged", () => { if (raiz.classList.contains("editando")) mostrarCampo(); });
+window.visualViewport?.addEventListener("resize", () => { if (raiz.classList.contains("editando")) mostrarCampo(); });
 
 // ── Envio ────────────────────────────────────────────────────────────────────
 function base64(buffer) {

@@ -34,6 +34,12 @@ npm run status                    # o que mudou
 npm run run -- endpoints/getPacks '{}' --ctx '{ initData: { user: { id: 1 } } }'
 ```
 
+## Modo compacto
+
+O app não chama `expand()` e o layout cabe em meia altura (usa `--tg-viewport-stable-height`). Para abrir compacto, configure o modo de abertura no @BotFather (Mini App) ou use `mode=compact` no link direto. Segundo a documentação do Telegram, o padrão é altura total; há relato de que o Android às vezes expande mesmo em modo compacto.
+
+Ao digitar o nome de um pacote, o app esconde o título, a prévia e o seletor, deixando só o campo e o botão acima do teclado; Enter envia.
+
 ## Limitações
 
 - Vídeo depende de WebCodecs com VP9 no WebView do Telegram. O app detecta e avisa quando o aparelho não suporta (imagens continuam funcionando).
