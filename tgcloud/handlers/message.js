@@ -11,7 +11,7 @@ function boasVindas() {
   const botao = MINI_APP_URL
     ? `<tg-button-row align="center"><tg-button type="web_app" style="success" url="${esc(MINI_APP_URL)}">Abrir o app</tg-button></tg-button-row>`
     : '';
-  return `<h3>abafigurinhas</h3><p>${esc(TEXTO)}</p>${botao}`;
+  return `<h1>@abafigurinhas</h1><p>${esc(TEXTO)}</p>${botao}`;
 }
 
 export default async function (message) {
