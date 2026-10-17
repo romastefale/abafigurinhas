@@ -203,7 +203,7 @@ html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:st
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sel:rgba(255,255,255,.16)}}
 :root[data-theme="dark"]{--sel:rgba(255,255,255,.16)}
 .forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;height:3em;padding:.25em;border-radius:1.5em}
-.forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:100%;padding:0 .2em;border:0;border-radius:1.25em;
+.forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:100%;padding:0 .2em;border:0;border-radius:calc(1.25 * var(--u));
   background:transparent;color:var(--bar-sub);font-size:.8em;font-weight:500;letter-spacing:-.01em;transition:background .2s ease,color .2s ease}
 .forma button svg{width:1.3em;height:1.3em;flex:0 0 auto}
 .forma button span{white-space:nowrap}
