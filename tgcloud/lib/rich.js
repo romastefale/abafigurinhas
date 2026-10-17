@@ -7,3 +7,6 @@ export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 export function avisoDoPacote({ created, title, link }) {
   return `<h1>${created ? 'Pacote criado' : 'Pacote atualizado'}:</h1><p><a href="${esc(link)}">${esc(title)}</a></p>`;
 }
+
+// Opções de prévia do link (LinkPreviewOptions): a prévia do próprio pacote, em tamanho grande.
+export const previaDoPacote = (link) => ({ url: link, prefer_large_media: true });

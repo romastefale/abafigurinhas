@@ -9,7 +9,7 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | Parte | Onde | O que faz |
 |---|---|---|
 | `web/` | Mini App (hospedado em `https://app<id>.tgcloud.ai/`) | Escolhe imagem/vídeo, converte com WebCodecs ([Mediabunny](https://mediabunny.dev)) e mostra a prévia. Visual adaptado da página do `romastefale/realista`. |
-| `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente e avisa no chat com uma única mensagem rica ("Pacote criado" / "Pacote atualizado" + o nome do pacote como hiperlink para o pacote) ("Pacote criado:" em H1 e, na linha de baixo, o nome como hiperlink em texto comum). |
+| `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente e avisa no chat com uma única mensagem rica ("Pacote criado" / "Pacote atualizado:" em H1 e, na linha de baixo, o nome do pacote como hiperlink para o pacote), com a prévia do link. |
 | `tgcloud/endpoints/getPacks.js` | serverless | Lista os pacotes do usuário. |
 | `tgcloud/handlers/message.js` | serverless | No chat, responde com uma mensagem rica (`sendRichMessage`, Bot API 10.1) e um botão verde (Bot API 10.3) que abre o app; se o Telegram recusar a mensagem rica, cai para texto simples. |
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
@@ -49,7 +49,7 @@ Ao digitar o nome de um pacote, o app esconde o título, a prévia e o seletor, 
 - Sem conversão de vídeo em áudio (não há como encodar Opus de forma confiável no WebView).
 - A lista de pacotes vem da tabela `packs` (só os criados pelo app) e é conferida no Telegram a cada abertura com `getStickerSet`: pacotes que o Bot API não devolve ficam fora da lista (nada é apagado da tabela), o formato mostrado é o real (`is_video`/`is_animated`) e pacotes com 120 figurinhas aparecem desabilitados como "(cheio)". Nenhuma dessas decisões depende do texto de um erro, que a documentação não garante.
 - O app só enxerga os pacotes criados por ele. Pacotes de versões anteriores do bot não aparecem e não há como adicioná-los por link.
-- O aviso no chat é só o hiperlink: a documentação não prevê prévia de link para mensagens ricas (`link_preview_options` vale para mensagens de texto). O Telegram mostra o aviso "Abrir este link?" ao tocar num link embutido.
+- A prévia do link vem de `editMessageText`, o único método do Bot API que aceita `rich_message` junto de `link_preview_options`: o bot envia a mensagem rica e edita essa mesma mensagem (continua sendo uma só). Se a edição falhar, a mensagem com o hiperlink permanece. O Telegram mostra o aviso "Abrir este link?" ao tocar num link embutido.
 
 ## Proteção dos dados
 

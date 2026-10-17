@@ -4,7 +4,7 @@ import { packs } from '../schema.js';
 import { decodeBase64 } from '../lib/base64.js';
 import { KINDS, matchesMime, randomEmoji, cleanTitle, newPackName, explain } from '../lib/stickers.js';
 import { inspecionar, MAX_FIGURINHAS } from '../lib/sets.js';
-import { avisoDoPacote } from '../lib/rich.js';
+import { avisoDoPacote, previaDoPacote } from '../lib/rich.js';
 
 const fail = (message, code, extra = {}) => new EndpointError(message, { code, ...extra });
 const link = (name) => `https://t.me/addstickers/${name}`;
@@ -20,13 +20,29 @@ async function remember(userId, name, title, format) {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-// Uma única mensagem rica no chat confirma o resultado: o nome do pacote é um hiperlink para o pacote.
-// Se o envio falhar, o resultado do pacote não é desfeito: só vai para o log.
+// Uma única mensagem rica no chat confirma o resultado. A documentação do Bot API só dá prévia de link a
+// `editMessageText` (que edita mensagens "text, rich and game" e aceita `rich_message` junto de
+// `link_preview_options`); `sendRichMessage` não tem esse parâmetro. Por isso: envia e depois edita a
+// MESMA mensagem para acrescentar a prévia (continua sendo uma mensagem só). Se a edição falhar, a
+// mensagem já enviada (com o hiperlink) permanece. Nada aqui desfaz nem esconde o resultado.
 async function avisarNoChat(userId, resultado) {
+  const rich_message = { html: avisoDoPacote(resultado) };
+  let enviada;
   try {
-    await api.sendRichMessage({ chat_id: userId, rich_message: { html: avisoDoPacote(resultado) } });
+    enviada = await api.sendRichMessage({ chat_id: userId, rich_message });
   } catch (e) {
     console.warn('aviso no chat falhou:', (e && e.description) || String(e));
+    return;
+  }
+  try {
+    await api.editMessageText({
+      chat_id: userId,
+      message_id: enviada.message_id,
+      rich_message,
+      link_preview_options: previaDoPacote(resultado.link),
+    });
+  } catch (e) {
+    console.warn('prévia do link não aplicada:', (e && e.description) || String(e));
   }
 }
 
