@@ -105,24 +105,17 @@ async function converter() {
   if (!arquivo || ocupado) return;
   ocupado = true;
   limparFigurinha();
+  dica(""); // apaga o aviso de aparelho sem suporte, se houver
   estado("carregando");
   try {
-    if (ehVideo(arquivo)) {
-      dica("Convertendo vídeo… 0%");
-      figurinha = await converterVideo(arquivo, forma, (p) => dica(`Convertendo vídeo… ${Math.min(99, Math.round(p * 100))}%`));
-    } else {
-      dica("Convertendo imagem…");
-      figurinha = await converterImagem(arquivo, forma);
-    }
+    figurinha = ehVideo(arquivo) ? await converterVideo(arquivo, forma) : await converterImagem(arquivo, forma);
     figurinha.url = URL.createObjectURL(figurinha.blob);
     figurinha.forma = forma;
     mostrarPrevia();
     await prepararDestino();
-    dica("");
     estado("pronto");
   } catch (erro) {
     limparFigurinha();
-    dica("");
     estado("erro", erro instanceof ErroDeConversao ? erro.message : "Não consegui converter esse arquivo.");
     if (!(erro instanceof ErroDeConversao)) console.error(erro);
   } finally {
@@ -241,19 +234,16 @@ async function enviar(destino) {
   sairDaEdicao();
   ocupado = true;
   estado("carregando");
-  dica("Enviando…");
   try {
     const entrada = { ...destino, mime: figurinha.mime, data: base64(await figurinha.blob.arrayBuffer()) };
     const r = await chamar("addSticker", entrada);
-    ultimoLink = r.link;
-    dica(""); // o botão "Abrir pacote" já confirma
+    ultimoLink = r.link; // o botão "Abrir pacote" já confirma o resultado
     $("#destino-bar").hidden = true;
     $("#campo-bar").hidden = true;
     $("#abrir").hidden = false;
     tg?.HapticFeedback?.notificationOccurred?.("success");
     estado("pronto");
   } catch (erro) {
-    dica("");
     estado("erro", mensagemDe(erro));
     $("#destino").value = modoCampo || ""; // volta a lista para o início: dá para tentar de novo
     tg?.HapticFeedback?.notificationOccurred?.("error");
