@@ -33,13 +33,9 @@ export function newPackName(title, botUsername) {
   return `${base || 'pack'}${suffix}`;
 }
 
-// Mensagens em português para os erros mais comuns do Bot API.
+// Mostra ao usuário o motivo que o Telegram devolve em `description` ("the error is explained in the
+// description"). Nenhum comportamento do app depende do texto de um erro.
 export function explain(description) {
-  const d = String(description || '');
-  if (/occupied/i.test(d)) return 'Esse nome de pacote já existe.';
-  if (/STICKERSET_INVALID|sticker set.*(not found|invalid)/i.test(d)) return 'Pacote não encontrado.';
-  if (/STICKERS_TOO_MUCH|too much/i.test(d)) return 'Esse pacote já está cheio.';
-  if (/user not found|USER_IS_BOT|PEER_ID_INVALID/i.test(d)) return 'Abra o bot e toque em Iniciar antes de usar o app.';
-  if (/wrong file|wrong type|STICKER_(PNG|VIDEO|TGS)|dimensions|file is too big/i.test(d)) return 'O Telegram recusou o arquivo gerado.';
-  return 'O Telegram recusou a operação.';
+  const motivo = String(description || '').replace(/^Bad Request:\s*/i, '').trim().slice(0, 160);
+  return motivo ? `O Telegram recusou a operação (${motivo}).` : 'O Telegram recusou a operação.';
 }
