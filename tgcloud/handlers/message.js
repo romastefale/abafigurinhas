@@ -3,10 +3,9 @@
 // que abre o Mini App. A tag e os atributos seguem a seção "Rich HTML style" da documentação.
 import { api, BotApiError } from 'sdk';
 import { MINI_APP_URL } from '../lib/config.js';
+import { esc } from '../lib/rich.js';
 
 const TEXTO = 'Transforme imagens e vídeos em figurinhas. Abra o app, escolha o arquivo e adicione ao seu pacote.';
-
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 function boasVindas() {
   const botao = MINI_APP_URL

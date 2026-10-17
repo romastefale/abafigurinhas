@@ -21,15 +21,6 @@ export function cleanTitle(value) {
   return title.length >= 1 && title.length <= 64 ? title : '';
 }
 
-// "https://t.me/addstickers/nome", "addstickers/nome" ou "nome" -> "nome" (ou '' se inválido)
-export function packNameFromRef(value) {
-  if (typeof value !== 'string') return '';
-  const path = value.trim().split(/[?#]/)[0];
-  const last = path.split('/').filter(Boolean).pop() || '';
-  const name = last.toLowerCase();
-  return /^[a-z][a-z0-9_]{0,63}$/.test(name) ? name : '';
-}
-
 // Nome do pacote: letras/dígitos/_, começa com letra, termina em _by_<bot>, até 64 caracteres.
 export function newPackName(title, botUsername) {
   const bot = botUsername.toLowerCase();
