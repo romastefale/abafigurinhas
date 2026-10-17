@@ -54,7 +54,8 @@ $("#nome-arquivo").addEventListener("click", escolher);
 $("#arquivo").addEventListener("change", (e) => {
   arquivo = e.target.files[0] || null;
   limparFigurinha();
-  $("#nome-arquivo").value = arquivo ? arquivo.name : "";
+  // confirma a escolha pelo tipo de figurinha que vai sair, não pelo nome do arquivo
+  $("#nome-arquivo").value = arquivo ? (ehVideo(arquivo) ? "sticker animado" : "sticker estática") : "";
   estado("vazio");
   dica("");
   if (arquivo && ehVideo(arquivo)) {
@@ -92,7 +93,7 @@ $("#form").addEventListener("submit", async (e) => {
     figurinha.url = URL.createObjectURL(figurinha.blob);
     mostrarPrevia();
     await prepararDestino();
-    dica(`${Math.ceil(figurinha.blob.size / 1024)} KB · ${figurinha.tipo === "video" ? "WebM VP9 512×512" : "512×512"}`);
+    dica("");
     estado("pronto");
   } catch (erro) {
     limparFigurinha();
