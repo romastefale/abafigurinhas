@@ -7,6 +7,7 @@ const $ = (s) => document.querySelector(s);
 const st = { carregando: $("#st-carregando"), pronto: $("#st-pronto"), erro: $("#st-erro") };
 $("#clip-squircle-d").setAttribute("d", caminhoSquirclePrevia());
 const NOVO = "novo";
+const CODIGOS_DE_LISTA = new Set(["PACK_UNAVAILABLE", "PACK_FULL", "FORMAT_MISMATCH"]);
 
 let arquivo = null;
 let figurinha = null; // { blob, mime, tipo, url }
@@ -152,7 +153,7 @@ async function prepararDestino() {
   const opcao = (valor, texto, extra = {}) =>
     sel.append(Object.assign(document.createElement("option"), { value: valor, textContent: texto }, extra));
   opcao("", "Adicionar ao pacote…", { disabled: true, hidden: true });
-  for (const p of compativeis) opcao(String(p.id), p.title);
+  for (const p of compativeis) opcao(String(p.id), p.full ? `${p.title} (cheio)` : p.title, { disabled: !!p.full });
   opcao(NOVO, "+ Novo pacote…");
   mostrarLista();
 }
@@ -239,6 +240,11 @@ async function enviar(destino) {
   } catch (erro) {
     estado("erro", mensagemDe(erro));
     if ($("#campo-bar").hidden) $("#destino").value = ""; // lista de volta ao início: dá para tentar de novo
+    if (CODIGOS_DE_LISTA.has(erro?.parameters?.code)) {
+      // a situação do pacote mudou no Telegram: mostra o motivo e recarrega a lista, que já vem atualizada
+      $("#motivo").hidden = false;
+      await prepararDestino().catch(() => {});
+    }
     tg?.HapticFeedback?.notificationOccurred?.("error");
   } finally {
     ocupado = false;
