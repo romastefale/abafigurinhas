@@ -113,7 +113,7 @@ export async function converterImagem(arquivo, forma = "square") {
   throw new ErroDeConversao("A imagem ficou grande demais para uma figurinha.");
 }
 
-async function codificar(arquivo, bitrate, fim, forma, aoProgredir) {
+async function codificar(arquivo, bitrate, fim, forma) {
   const input = new Input({ source: new BlobSource(arquivo), formats: ALL_FORMATS });
   const output = new Output({ format: new WebMOutputFormat(), target: new BufferTarget() });
   const video = { width: LADO, height: LADO, fit: "cover", frameRate: 30, codec: "vp9", bitrate };
@@ -149,12 +149,11 @@ async function codificar(arquivo, bitrate, fim, forma, aoProgredir) {
     console.warn("Conversão inválida:", conversao.discardedTracks.map((t) => `${t.track.type}: ${t.reason}`));
     throw new ErroDeConversao("Esse vídeo não pode ser convertido neste aparelho.");
   }
-  conversao.onProgress = aoProgredir;
   await conversao.execute();
   return output.target.buffer;
 }
 
-export async function converterVideo(arquivo, forma = "square", aoProgredir = () => {}) {
+export async function converterVideo(arquivo, forma = "square") {
   if (!(await podeGerarVideo())) {
     throw new ErroDeConversao("Este aparelho não consegue gerar figurinha de vídeo. Imagens funcionam.");
   }
@@ -168,7 +167,7 @@ export async function converterVideo(arquivo, forma = "square", aoProgredir = ()
   const fim = Math.min(MAX_SEGUNDOS, duracao);
   let bitrate = 700_000;
   for (let tentativa = 0; tentativa < 6; tentativa++) {
-    const buffer = await codificar(arquivo, bitrate, fim, forma, (p) => aoProgredir((tentativa + p) / 6));
+    const buffer = await codificar(arquivo, bitrate, fim, forma);
     if (buffer.byteLength <= MAX_VIDEO && (buffer.byteLength <= ALVO_VIDEO || tentativa === 5)) {
       return { blob: new Blob([buffer], { type: "video/webm" }), mime: "video/webm", tipo: "video" };
     }
