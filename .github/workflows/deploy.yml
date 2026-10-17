@@ -18,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       migrate_mode:
-        description: "Migração do banco: safe (só aditivas), yes (aplica também drops), dry-run (só mostra)"
+        description: "Migração do banco: safe (só mudanças aditivas) ou dry-run (só mostra). Remoções nunca são aplicadas pelo CI."
         type: choice
-        options: [safe, yes, dry-run]
+        options: [safe, dry-run]
         default: safe
 
 concurrency:
@@ -64,16 +64,20 @@ jobs:
       - name: Mudanças a publicar
         run: npm run status
 
+      # Os pacotes dos usuários ficam na tabela `packs`. O deploy não toca no banco, mas um schema que
+      # apague/renomeie a tabela ou as colunas faria a lista "sumir": isto barra esse commit.
+      - name: Proteger os dados (schema)
+        run: npm run check:schema
+
       - name: Publicar módulos
         run: npm run deploy
 
-      # `migrate` sem flag exige terminal interativo. Em CI usamos --safe
-      # (aplica só mudanças aditivas e ignora as destrutivas).
+      # `migrate` sem flag exige terminal interativo. Em CI usamos --safe: aplica só mudanças
+      # aditivas e ignora as destrutivas. Não há opção --yes aqui de propósito.
       - name: Migrar banco
         run: |
           mode="${{ github.event.inputs.migrate_mode || 'safe' }}"
           case "$mode" in
-            yes)      npm run migrate -- --yes ;;
             dry-run)  npm run migrate -- --dry-run ;;
             *)        npm run migrate -- --safe ;;
           esac

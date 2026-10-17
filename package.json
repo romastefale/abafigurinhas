@@ -13,6 +13,7 @@
     "run": "tgcloud run",
     "fetch": "tgcloud fetch",
     "migrate": "tgcloud migrate",
-    "webhook": "tgcloud webhook"
+    "webhook": "tgcloud webhook",
+    "check:schema": "node scripts/check-schema.mjs"
   }
 }

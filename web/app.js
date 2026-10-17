@@ -184,29 +184,22 @@ function enviarCampo() {
 }
 $("#enviar").addEventListener("click", enviarCampo);
 $("#cancelar").addEventListener("click", () => {
-  sairDaEdicao();
+  $("#campo").blur();
   mostrarLista();
 });
 
-// ── Teclado: enquanto digita, só o campo e o botão ficam visíveis ─────────────
-const raiz = document.documentElement;
-let saiuDoCampo = 0;
+// ── Teclado ──────────────────────────────────────────────────────────────────
+// O campo fica na própria barra da lista e a página não muda. O teclado só reduz a área visível,
+// então mantemos a barra à vista enquanto o campo está em uso.
+let campoAtivo = false;
 const mostrarCampo = () => $("#campo").scrollIntoView({ block: "center", behavior: "smooth" });
-$("#campo").addEventListener("focus", () => {
-  clearTimeout(saiuDoCampo);
-  raiz.classList.add("editando");
-  mostrarCampo();
-});
-$("#campo").addEventListener("blur", () => {
-  // atraso: tocar no botão de envio tira o foco antes do clique; o layout só volta depois dele
-  saiuDoCampo = setTimeout(() => raiz.classList.remove("editando"), 300);
-});
+$("#campo").addEventListener("focus", () => { campoAtivo = true; mostrarCampo(); });
+$("#campo").addEventListener("blur", () => { campoAtivo = false; });
 $("#campo").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); $("#campo").blur(); enviarCampo(); }
 });
-// o teclado muda a altura visível: recentraliza o campo
-tg?.onEvent?.("viewportChanged", () => { if (raiz.classList.contains("editando")) mostrarCampo(); });
-window.visualViewport?.addEventListener("resize", () => { if (raiz.classList.contains("editando")) mostrarCampo(); });
+tg?.onEvent?.("viewportChanged", () => { if (campoAtivo) mostrarCampo(); });
+window.visualViewport?.addEventListener("resize", () => { if (campoAtivo) mostrarCampo(); });
 
 // ── Envio ────────────────────────────────────────────────────────────────────
 function base64(buffer) {
@@ -216,16 +209,9 @@ function base64(buffer) {
   return btoa(texto);
 }
 
-// Sai do modo de digitação na hora (o blur nem sempre dispara quando o campo some ou o teclado fecha).
-function sairDaEdicao() {
-  clearTimeout(saiuDoCampo);
-  $("#campo").blur();
-  raiz.classList.remove("editando");
-}
-
 async function enviar(destino) {
   if (!figurinha || ocupado) return;
-  sairDaEdicao();
+  $("#campo").blur(); // fecha o teclado
   ocupado = true;
   estado("carregando");
   try {
