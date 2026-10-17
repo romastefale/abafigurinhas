@@ -1,4 +1,4 @@
-# abafo
+# abafigurinhas
 
 Bot de figurinhas para Telegram, 100% **Telegram Serverless** (sem servidor, sem Railway, sem Actions no caminho do usuário).
 
