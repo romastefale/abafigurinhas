@@ -184,7 +184,7 @@ body{min-height:var(--vh);place-items:center;padding-top:max(8px,env(safe-area-i
    Enquanto o campo tem foco, some o que não ajuda a digitar; sobram o campo e o
    botão, que cabem na área acima do teclado. */
 html.editando h1,html.editando .dica,html.editando .moldura,html.editando #destino-bar,
-html.editando .pill-bar.com-anexar{display:none}
+html.editando #arquivo-bar{display:none}
 html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:start center}
 /* ── Contorno da figurinha ──────────────────────────────────────────────── */
 .forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;height:3em;padding:.25em;border-radius:1.5em}
@@ -206,7 +206,7 @@ html.editando #forma{display:none}
 <main class="card frost">
   <h1>abafigurinhas</h1>
 
-  <div class="pill-bar com-anexar frost">
+  <div class="pill-bar com-anexar frost" id="arquivo-bar">
     <form class="page-search" role="search" aria-label="Converter arquivo" id="form">
       <input id="nome-arquivo" type="text" readonly placeholder="Imagem ou vídeo" aria-label="Arquivo escolhido"
              autocomplete="off" spellcheck="false">
@@ -253,11 +253,14 @@ html.editando #forma{display:none}
       <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </div>
   </div>
-  <div class="pill-bar frost" id="campo-bar" hidden>
+  <div class="pill-bar com-anexar frost" id="campo-bar" hidden>
     <div class="page-search">
-      <input id="campo" type="text" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" maxlength="200">
+      <input id="campo" type="text" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" maxlength="200" placeholder="Nome do novo pacote" aria-label="Nome do novo pacote">
     </div>
-    <button class="acao frost" type="button" id="enviar" aria-label="Enviar">
+    <button class="anexar frost" type="button" id="cancelar" aria-label="Voltar para a lista de pacotes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <button class="acao frost" type="button" id="enviar" aria-label="Criar pacote">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></svg>
     </button>
   </div>
