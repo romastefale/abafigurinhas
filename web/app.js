@@ -90,7 +90,7 @@ function limparFigurinha() {
   $("#moldura").classList.remove("on", "video");
   $("#video").removeAttribute("src");
   $("#imagem").removeAttribute("src");
-  for (const id of ["#destino-bar", "#campo-bar", "#adicionar", "#abrir"]) $(id).hidden = true;
+  for (const id of ["#destino-bar", "#campo-bar", "#abrir"]) $(id).hidden = true;
   ultimoLink = "";
 }
 
@@ -143,7 +143,9 @@ function mostrarPrevia() {
   moldura.classList.add("on");
 }
 
-// ── Destino: pacote existente, novo ou por link ──────────────────────────────
+// ── Destino: uma lista só (seus pacotes, novo pacote, pacote por link) ───────
+let modoCampo = null; // NOVO | EXISTENTE enquanto o campo de texto está aberto
+
 async function prepararDestino() {
   try {
     pacotes = await chamar("getPacks", {});
@@ -154,26 +156,48 @@ async function prepararDestino() {
   const compativeis = pacotes.filter((p) => p.format === figurinha.tipo);
   const sel = $("#destino");
   sel.replaceChildren();
-  const opcao = (valor, texto) => sel.append(Object.assign(document.createElement("option"), { value: valor, textContent: texto }));
+  const opcao = (valor, texto, extra = {}) =>
+    sel.append(Object.assign(document.createElement("option"), { value: valor, textContent: texto }, extra));
+  opcao("", "Adicionar ao pacote…", { disabled: true, hidden: true });
   for (const p of compativeis) opcao(String(p.id), p.title);
-  opcao(NOVO, "Novo pacote…");
+  opcao(NOVO, "+ Novo pacote…");
   opcao(EXISTENTE, "Pacote existente por link…");
-  sel.value = compativeis.length ? String(compativeis[0].id) : NOVO;
-  atualizarCampo();
+  reiniciarDestino();
   $("#destino-bar").hidden = false;
-  $("#adicionar").hidden = false;
 }
 
-function atualizarCampo() {
-  const v = $("#destino").value;
-  const campo = $("#campo");
-  const mostrar = v === NOVO || v === EXISTENTE;
-  $("#campo-bar").hidden = !mostrar;
-  campo.value = "";
-  campo.placeholder = v === NOVO ? "Nome do novo pacote" : "Link ou nome do pacote";
-  campo.inputMode = v === EXISTENTE ? "url" : "text";
+function reiniciarDestino() {
+  $("#destino").value = "";
+  modoCampo = null;
+  $("#campo-bar").hidden = true;
+  $("#campo").value = "";
 }
-$("#destino").addEventListener("change", atualizarCampo);
+
+function abrirCampo(modo) {
+  modoCampo = modo;
+  const campo = $("#campo");
+  campo.value = "";
+  campo.placeholder = modo === NOVO ? "Nome do novo pacote" : "Link ou nome do pacote";
+  campo.inputMode = modo === EXISTENTE ? "url" : "text";
+  $("#campo-bar").hidden = false;
+  campo.focus();
+}
+
+// Escolher um pacote da lista já adiciona a figurinha; "novo" e "por link" pedem um texto antes.
+$("#destino").addEventListener("change", () => {
+  const v = $("#destino").value;
+  if (v === NOVO || v === EXISTENTE) return abrirCampo(v);
+  $("#campo-bar").hidden = true;
+  modoCampo = null;
+  if (v) enviar({ packId: Number(v) });
+});
+
+function enviarCampo() {
+  const texto = $("#campo").value.trim();
+  if (modoCampo === NOVO) return texto ? enviar({ title: texto }) : aviso("Dê um nome ao pacote.");
+  if (modoCampo === EXISTENTE) return texto ? enviar({ packRef: texto }) : aviso("Cole o link ou o nome do pacote.");
+}
+$("#enviar").addEventListener("click", enviarCampo);
 
 // ── Teclado: enquanto digita, só o campo e o botão ficam visíveis ─────────────
 const raiz = document.documentElement;
@@ -185,11 +209,11 @@ $("#campo").addEventListener("focus", () => {
   mostrarCampo();
 });
 $("#campo").addEventListener("blur", () => {
-  // atraso: tocar em "Adicionar" tira o foco antes do clique; o layout só volta depois dele
+  // atraso: tocar no botão de envio tira o foco antes do clique; o layout só volta depois dele
   saiuDoCampo = setTimeout(() => raiz.classList.remove("editando"), 300);
 });
 $("#campo").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); $("#campo").blur(); $("#adicionar").click(); }
+  if (e.key === "Enter") { e.preventDefault(); $("#campo").blur(); enviarCampo(); }
 });
 // o teclado muda a altura visível: recentraliza o campo
 tg?.onEvent?.("viewportChanged", () => { if (raiz.classList.contains("editando")) mostrarCampo(); });
@@ -203,41 +227,30 @@ function base64(buffer) {
   return btoa(texto);
 }
 
-$("#adicionar").addEventListener("click", async () => {
+async function enviar(destino) {
   if (!figurinha || ocupado) return;
-  const destino = $("#destino").value;
-  const texto = $("#campo").value.trim();
-  const entrada = { mime: figurinha.mime };
-  if (destino === NOVO) {
-    if (!texto) return aviso("Dê um nome ao pacote.");
-    entrada.title = texto;
-  } else if (destino === EXISTENTE) {
-    if (!texto) return aviso("Cole o link ou o nome do pacote.");
-    entrada.packRef = texto;
-  } else {
-    entrada.packId = Number(destino);
-  }
   ocupado = true;
-  $("#adicionar").disabled = true;
   estado("carregando");
   dica("Enviando…");
   try {
-    entrada.data = base64(await figurinha.blob.arrayBuffer());
+    const entrada = { ...destino, mime: figurinha.mime, data: base64(await figurinha.blob.arrayBuffer()) };
     const r = await chamar("addSticker", entrada);
     ultimoLink = r.link;
     dica(r.created ? `Pacote “${r.title}” criado.` : `Adicionada a “${r.title}”.`);
+    $("#destino-bar").hidden = true;
+    $("#campo-bar").hidden = true;
     $("#abrir").hidden = false;
     tg?.HapticFeedback?.notificationOccurred?.("success");
     estado("pronto");
   } catch (erro) {
     dica("");
     estado("erro", mensagemDe(erro));
+    $("#destino").value = modoCampo || ""; // volta a lista para o início: dá para tentar de novo
     tg?.HapticFeedback?.notificationOccurred?.("error");
   } finally {
     ocupado = false;
-    $("#adicionar").disabled = false;
   }
-});
+}
 
 function aviso(texto) {
   estado("erro", texto);
