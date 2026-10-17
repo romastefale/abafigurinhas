@@ -5,7 +5,7 @@ export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 // é um hiperlink (`<a href>`, "Rich HTML style") que aponta para o link do pacote. O `href` passa pelo
 // mesmo escape dos atributos (`&quot;`, `&amp;`, `&lt;`, `&gt;` são entidades aceitas).
 export function avisoDoPacote({ created, title, link }) {
-  return `<p><b>${created ? 'Pacote criado' : 'Pacote atualizado'}:</b> <a href="${esc(link)}">${esc(title)}</a></p>`;
+  return `<h1>${created ? 'Pacote criado' : 'Pacote atualizado'}:</h1><p><a href="${esc(link)}">${esc(title)}</a></p>`;
 }
 
 // Opções de prévia do link (LinkPreviewOptions): a prévia do próprio pacote, em tamanho grande.
