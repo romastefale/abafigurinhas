@@ -1,4 +1,4 @@
-# abafo
+# abafigurinhas
 
 Bot de figurinhas para Telegram, 100% **Telegram Serverless** (sem servidor, sem Railway, sem Actions no caminho do usuário).
 
@@ -14,6 +14,8 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | `tgcloud/handlers/message.js` | serverless | No chat, só leva o usuário ao app. |
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
 | `.github/workflows/deploy.yml` | GitHub Actions | A cada push em `main`: `fetch`, `push`, `migrate --safe`, `webhook`. |
+
+Contorno (escolhido na tela): **retangular** (cantos vivos), **arredondado** (raio de 14% do lado) ou **squircle** (superelipse |x|⁴+|y|⁴=1). Fora do contorno a figurinha fica transparente (WebP/PNG com alpha; WebM VP9 com alpha).
 
 Conversões (todas no aparelho):
 - **Imagem** → WebP (ou PNG, se o navegador não codifica WebP) 512×512, até 512 KB.
@@ -33,6 +35,12 @@ npm ci
 npm run status                    # o que mudou
 npm run run -- endpoints/getPacks '{}' --ctx '{ initData: { user: { id: 1 } } }'
 ```
+
+## Modo compacto
+
+O app não chama `expand()` e o layout cabe em meia altura (usa `--tg-viewport-stable-height`). Para abrir compacto, configure o modo de abertura no @BotFather (Mini App) ou use `mode=compact` no link direto. Segundo a documentação do Telegram, o padrão é altura total; há relato de que o Android às vezes expande mesmo em modo compacto.
+
+Ao digitar o nome de um pacote, o app esconde o título, a prévia e o seletor, deixando só o campo e o botão acima do teclado; Enter envia.
 
 ## Limitações
 
