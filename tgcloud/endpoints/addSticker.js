@@ -8,12 +8,15 @@ import { avisoDoPacote } from '../lib/rich.js';
 const fail = (message, code, extra = {}) => new EndpointError(message, { code, ...extra });
 const link = (name) => `https://t.me/addstickers/${name}`;
 
+// Registra o pacote na lista do usuário (a lista é só do app; o pacote em si vive no Telegram).
+// Um insert simples resolve para { rowsAffected, lastInsertRowid, rows } (pode vir como BigInt).
 async function remember(userId, name, title, format) {
   const known = await db.select().from(packs)
     .where(and(eq(packs.userId, userId), eq(packs.name, name))).get();
   if (known) return known.id;
   const res = await db.insert(packs).values({ userId, name, title, format }).run();
-  return res.lastInsertRowid;
+  const id = Number(res && res.lastInsertRowid);
+  return Number.isFinite(id) && id > 0 ? id : null;
 }
 
 // Uma única mensagem rica no chat confirma o resultado. Se o envio falhar, o pacote já foi
@@ -46,7 +49,14 @@ async function criarPacote(userId, rawTitle, kind, sticker) {
     const name = newPackName(title, me.username);
     try {
       await api.createNewStickerSet({ user_id: userId, name, title, stickers: [sticker()] });
-      const id = await remember(userId, name, title, kind.format);
+      // o pacote já existe no Telegram: se o registro na lista falhar, não escondemos isso do usuário
+      // (ele recebe o link no chat); a falha só vai para o log.
+      let id = null;
+      try {
+        id = await remember(userId, name, title, kind.format);
+      } catch (e) {
+        console.error('pacote criado, mas não registrado na lista:', name, (e && e.message) || String(e));
+      }
       return { packId: id, name, title, link: link(name), created: true };
     } catch (e) {
       const taken = e instanceof BotApiError && /occupied/i.test(e.description);
