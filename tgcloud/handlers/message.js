@@ -1,5 +1,6 @@
 // Toda a conversão acontece no Mini App; o chat só leva o usuário até ele.
-// Boas-vindas como mensagem rica (Bot API 10.1+) com um botão verde que abre o app.
+// Boas-vindas como mensagem rica (sendRichMessage, Bot API 10.1) com um botão verde (Bot API 10.3)
+// que abre o Mini App. A tag e os atributos seguem a seção "Rich HTML style" da documentação.
 import { api, BotApiError } from 'sdk';
 import { MINI_APP_URL } from '../lib/config.js';
 
@@ -9,7 +10,7 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, 
 
 function boasVindas() {
   const botao = MINI_APP_URL
-    ? `<tg-button-row><tg-button type="web_app" style="success" url="${esc(MINI_APP_URL)}">Abrir o app</tg-button></tg-button-row>`
+    ? `<tg-button-row align="center"><tg-button type="web_app" style="success" url="${esc(MINI_APP_URL)}">Abrir o app</tg-button></tg-button-row>`
     : '';
   return `<h3>abafigurinhas</h3><p>${esc(TEXTO)}</p>${botao}`;
 }

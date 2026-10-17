@@ -11,7 +11,7 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | `web/` | Mini App (hospedado em `https://app<id>.tgcloud.ai/`) | Escolhe imagem/vídeo, converte com WebCodecs ([Mediabunny](https://mediabunny.dev)) e mostra a prévia. Visual adaptado da página do `romastefale/realista`. |
 | `tgcloud/endpoints/addSticker.js` | serverless | Valida o arquivo, cria o pacote ou adiciona a um existente. |
 | `tgcloud/endpoints/getPacks.js` | serverless | Lista os pacotes do usuário. |
-| `tgcloud/handlers/message.js` | serverless | No chat, responde com uma mensagem rica (Bot API 10.1+) e um botão verde que abre o app; se o Telegram recusar a mensagem rica, cai para texto simples. |
+| `tgcloud/handlers/message.js` | serverless | No chat, responde com uma mensagem rica (`sendRichMessage`, Bot API 10.1) e um botão verde (Bot API 10.3) que abre o app; se o Telegram recusar a mensagem rica, cai para texto simples. |
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
 | `.github/workflows/deploy.yml` | GitHub Actions | A cada push em `main`: `fetch`, `push`, `migrate --safe`, `webhook`. |
 
