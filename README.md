@@ -1,6 +1,6 @@
 # abafigurinhas
 
-Bot de figurinhas para Telegram, 100% **Telegram Serverless** (sem servidor, sem Railway, sem Actions no caminho do usuário).
+Bot de figurinhas para Telegram, 100% **Telegram Serverless** (sem servidor próprio e sem Actions no caminho do usuário).
 
 O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por isso a conversão acontece **no aparelho**, dentro de um Mini App hospedado pelo próprio serverless; o resultado (já em formato de figurinha) vai para um *endpoint*, que o entrega ao Bot API.
 
@@ -15,7 +15,7 @@ O Telegram não converte mídia e o runtime serverless não roda ffmpeg. Por iss
 | `tgcloud/schema.js` | serverless | Tabela `packs`. |
 | `.github/workflows/deploy.yml` | GitHub Actions | A cada push em `main`: `fetch`, `push`, `migrate --safe`, `webhook`. |
 
-Contorno (escolhido na tela): **retangular** (cantos vivos), **arredondado** (raio de 14% do lado) ou **squircle** (superelipse |x|⁴+|y|⁴=1). Fora do contorno a figurinha fica transparente (WebP/PNG com alpha; WebM VP9 com alpha).
+Contorno (escolhido na tela): **square** (cantos vivos), **rounded** (raio de 14% do lado) ou **squircle** (superelipse |x|⁴+|y|⁴=1). Fora do contorno a figurinha fica transparente (WebP/PNG com alpha; WebM VP9 com alpha).
 
 Conversões (todas no aparelho):
 - **Imagem** → WebP (ou PNG, se o navegador não codifica WebP) 512×512, até 512 KB.

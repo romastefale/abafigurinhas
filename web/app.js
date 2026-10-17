@@ -14,7 +14,7 @@ let figurinha = null; // { blob, mime, tipo, url }
 let pacotes = [];
 let ocupado = false;
 let ultimoLink = "";
-let forma = "retangular";
+let forma = "square";
 
 // ── Telegram: tema e cores da barra ───────────────────────────────────────────
 function aplicarTema() {
@@ -133,7 +133,6 @@ st.erro.addEventListener("click", () => ($("#motivo").hidden = !$("#motivo").hid
 
 function mostrarPrevia() {
   const moldura = $("#moldura");
-  moldura.style.setProperty("--ratio", "1");
   moldura.dataset.forma = figurinha.forma;
   if (figurinha.tipo === "video") {
     moldura.classList.add("video");

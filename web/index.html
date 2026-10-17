@@ -127,43 +127,33 @@ button{font:inherit;cursor:pointer}
 .spin{animation:gira .8s linear infinite}
 @keyframes gira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-.lupa{position:absolute;top:.5625em;right:.5625em;width:2.125em;height:2.125em;border-radius:1.06em;border:0;padding:0;
+/* Botões redondos de vidro dentro da barra do arquivo: converter (seta, à direita) e anexar
+   (clipe, ao lado dela). A seta também serve de "enviar" na barra do nome do pacote. */
+.acao,.anexar{position:absolute;top:.5625em;width:2.125em;height:2.125em;border-radius:1.06em;border:0;padding:0;
   display:grid;place-items:center;color:var(--bar-text);box-shadow:var(--glass-float)}
-.lupa svg{width:.94em;height:.94em}
-/* Colar: ao lado da lupa, com o mesmo vidro e a mesma sombra. Some depois de colar e
-   volta se o texto colado mudar; colar de novo substitui o campo inteiro. */
-.colar{position:absolute;top:.5625em;right:3.0625em;width:2.125em;height:2.125em;border-radius:1.06em;border:0;padding:0;
-  display:grid;place-items:center;color:var(--bar-text);box-shadow:var(--glass-float)}
-.colar svg{width:.94em;height:.94em}
-.colar[hidden]{display:none}
-.colar:disabled{cursor:default;opacity:.55}
-.pill-bar.com-colar .page-search{right:5.56em}
-.lupa:disabled{cursor:default;opacity:.55}
+.acao{right:.5625em}
+.anexar{right:3.0625em}
+.acao svg,.anexar svg{width:.94em;height:.94em}
+.acao:disabled{cursor:default;opacity:.55}
+.pill-bar.com-anexar .page-search{right:5.56em}
 
-.downloads{display:flex;flex-wrap:wrap;justify-content:center;gap:.625em}
 .btn{display:inline-flex;align-items:center;gap:.5em;padding:.75em 1.375em;min-height:max(44px,2.75em);border-radius:999px;border:0;
   font-size:.97em;font-weight:600;letter-spacing:-.006em;color:var(--bar-text);box-shadow:var(--glass-float);
   transition:opacity .2s ease, transform .2s var(--glass-ease)}
 .btn:active{transform:scale(.975)}
-.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
 .btn svg{width:1.03em;height:1.03em}
-/* Tela estreita: os três downloads cabem lado a lado. */
-@media (max-width:480px){.downloads{gap:.5em}.btn{padding:.75em .8em;gap:.35em}}
 .motivo{margin:-.5em 0 0;font-size:.85em;color:var(--bar-sub);text-align:center}
 .motivo[hidden]{display:none}
 
-/* ── Específico do realista ─────────────────────────────────────────────── */
+/* ── Prévia, dica e motivo ──────────────────────────────────────────────── */
 .dica{margin:-.5em 0 0;font-size:.85em;line-height:1.4;color:var(--bar-sub);text-align:center}
 .dica[hidden]{display:none}
-/* Resultado: a imagem fica sobre um cartão de vidro (o mesmo da barra e do botão), só um pouco
-   maior que ela. A largura do cartão vem da proporção da imagem (--ratio, definida ao carregar)
-   e da altura máxima, que desconta o resto do card (título, barra, botão e espaços, em em) e as
-   margens da tela, para tudo caber sem rolar. */
-.moldura{--pad:.5em;--hmax:max(8em,calc(100svh - 18.5em - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom))));--ratio:1;
-  display:none;justify-self:center;padding:var(--pad);border-radius:1.1em;box-shadow:var(--glass-float);
-  width:min(100%,calc(var(--hmax) * var(--ratio) + 2 * var(--pad)))}
+/* Prévia: a figurinha fica sobre um cartão de vidro, só um pouco maior que ela. O lado é limitado
+   por --hmax (definido no bloco compacto), que desconta o resto do card para tudo caber sem rolar. */
+.moldura{--pad:.5em;display:none;justify-self:center;padding:var(--pad);border-radius:1.1em;box-shadow:var(--glass-float);
+  width:min(100%,calc(var(--hmax) + 2 * var(--pad)))}
 .moldura.on{display:block}
-.previa{display:block;width:100%;height:auto;border-radius:.65em}
+.previa{display:block;width:100%;height:auto}
 
 /* ── Específico do abafigurinhas ────────────────────────────────────────────────── */
 .pill-bar.sem-botao .page-search{inset:0;padding-right:1em}
@@ -172,10 +162,9 @@ button{font:inherit;cursor:pointer}
   font-size:max(16px,1.0625em);letter-spacing:-.012em;-webkit-appearance:none;appearance:none;text-overflow:ellipsis;cursor:pointer}
 .page-search select option{color:#1c1c1e}
 .caret{flex:0 0 auto;width:1em;height:1em;opacity:.6;pointer-events:none}
-.pill-bar[hidden],.downloads [hidden]{display:none}
+.pill-bar[hidden],.btn[hidden]{display:none}
 .previa-video{display:none}
 .moldura.video .previa{display:none}.moldura.video .previa-video{display:block}
-.btn.principal{font-weight:700}
 
 /* ── Modo compacto do Mini App (meia altura) ────────────────────────────────
    O Telegram mantém --tg-viewport-stable-height na raiz; fora dele vale 100svh.
@@ -187,31 +176,27 @@ body{min-height:var(--vh);place-items:center;padding-top:max(8px,env(safe-area-i
 .card h1{font-size:1.4em}
 .pill-bar{height:3em;border-radius:1.5em}
 .page-search{padding-left:.9em}
-.lupa{top:.4375em;right:.4375em}.colar{top:.4375em;right:2.9375em}
+.acao{top:.4375em;right:.4375em}.anexar{top:.4375em;right:2.9375em}
 .moldura{--hmax:max(7em,calc(var(--vh) - 19.8em))}
-.downloads{width:100%}
-.btn{flex:1;justify-content:center;height:calc(3 * var(--u));min-height:0;padding:0 1.2em;border-radius:calc(1.5 * var(--u))}
+.btn{width:100%;justify-content:center;height:calc(3 * var(--u));min-height:0;padding:0 1.2em;border-radius:calc(1.5 * var(--u))}
 
 /* ── Teclado aberto (nome do pacote) ────────────────────────────────────────
    Enquanto o campo tem foco, some o que não ajuda a digitar; sobram o campo e o
    botão, que cabem na área acima do teclado. */
 html.editando h1,html.editando .dica,html.editando .moldura,html.editando #destino-bar,
-html.editando .pill-bar.com-colar{display:none}
+html.editando .pill-bar.com-anexar{display:none}
 html.editando body{padding-top:max(10px,env(safe-area-inset-top));place-items:start center}
 /* ── Contorno da figurinha ──────────────────────────────────────────────── */
-:root{--sel:rgba(255,255,255,.55)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sel:rgba(255,255,255,.16)}}
-:root[data-theme="dark"]{--sel:rgba(255,255,255,.16)}
 .forma{display:grid;grid-template-columns:repeat(3,1fr);gap:.2em;width:100%;height:3em;padding:.25em;border-radius:1.5em}
 .forma button{display:flex;align-items:center;justify-content:center;gap:.4em;min-width:0;height:100%;padding:0 .2em;border:0;border-radius:calc(1.25 * var(--u));
   background:transparent;color:var(--bar-sub);font-size:.8em;font-weight:500;letter-spacing:-.01em;transition:background .2s ease,color .2s ease}
 .forma button svg{width:1.3em;height:1.3em;flex:0 0 auto}
 .forma button span{white-space:nowrap}
-.forma button[aria-checked="true"]{background:var(--sel);color:var(--bar-text);font-weight:600;box-shadow:0 1px 4px rgba(30,20,90,.12)}
+/* o destaque usa o mesmo vidro e a mesma sombra dos botões redondos */
+.forma button[aria-checked="true"]{background:var(--vidro-tint);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);color:var(--bar-text);font-weight:600;box-shadow:var(--glass-float)}
 /* a prévia mostra o contorno de verdade: sem cantos arredondados fixos */
-.previa{border-radius:0}
 /* O iOS não desenha a transparência do WebM na prévia (cantos pretos): recorta no contorno. */
-.moldura[data-forma="arredondado"] .previa{border-radius:14%}
+.moldura[data-forma="rounded"] .previa{border-radius:14%}
 .moldura[data-forma="squircle"] .previa{clip-path:url(#clip-squircle)}
 html.editando #forma{display:none}
 </style>
@@ -221,7 +206,7 @@ html.editando #forma{display:none}
 <main class="card frost">
   <h1>abafigurinhas</h1>
 
-  <div class="pill-bar com-colar frost">
+  <div class="pill-bar com-anexar frost">
     <form class="page-search" role="search" aria-label="Converter arquivo" id="form">
       <input id="nome-arquivo" type="text" readonly placeholder="Imagem ou vídeo" aria-label="Arquivo escolhido"
              autocomplete="off" spellcheck="false">
@@ -236,19 +221,19 @@ html.editando #forma{display:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>
       </button>
     </form>
-    <button class="colar frost" type="button" id="anexar" aria-label="Escolher arquivo">
+    <button class="anexar frost" type="button" id="anexar" aria-label="Escolher arquivo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11.5-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.2-8.2"/></svg>
     </button>
-    <button class="lupa frost" type="submit" form="form" id="converter" aria-label="Converter" disabled>
+    <button class="acao frost" type="submit" form="form" id="converter" aria-label="Converter" disabled>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></svg>
     </button>
   </div>
   <input type="file" id="arquivo" accept="image/*,video/*" hidden>
 
   <div class="forma frost" id="forma" role="radiogroup" aria-label="Contorno da figurinha">
-    <button type="button" role="radio" aria-checked="true" data-forma="retangular">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg><span>rectangle</span></button>
-    <button type="button" role="radio" aria-checked="false" data-forma="arredondado">
+    <button type="button" role="radio" aria-checked="true" data-forma="square">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg><span>square</span></button>
+    <button type="button" role="radio" aria-checked="false" data-forma="rounded">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg><span>rounded</span></button>
     <button type="button" role="radio" aria-checked="false" data-forma="squircle">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c6.6 0 8.5 1.9 8.5 8.5s-1.9 8.5-8.5 8.5-8.5-1.9-8.5-8.5S5.4 3.5 12 3.5Z"/></svg><span>squircle</span></button>
@@ -272,15 +257,13 @@ html.editando #forma{display:none}
     <div class="page-search">
       <input id="campo" type="text" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="send" maxlength="200">
     </div>
-    <button class="lupa frost" type="button" id="enviar" aria-label="Enviar">
+    <button class="acao frost" type="button" id="enviar" aria-label="Enviar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-5 5m5-5 5 5"/></svg>
     </button>
   </div>
 
-  <div class="downloads">
-    <button class="btn frost" type="button" id="abrir" hidden>
+  <button class="btn frost" type="button" id="abrir" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/></svg><span>Abrir pacote</span></button>
-  </div>
 </main>
 
 <script type="module" src="./app.js"></script>
