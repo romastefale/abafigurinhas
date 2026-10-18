@@ -4,7 +4,7 @@ import { packs } from '../schema.js';
 import { decodeBase64 } from '../lib/base64.js';
 import { KINDS, matchesMime, randomEmoji, cleanTitle, newPackName, explain } from '../lib/stickers.js';
 import { inspecionar, MAX_FIGURINHAS } from '../lib/sets.js';
-import { avisoDoPacote, previaDoPacote } from '../lib/rich.js';
+import { tituloDoAviso, linkDoPacote, previaDoPacote } from '../lib/rich.js';
 
 const fail = (message, code, extra = {}) => new EndpointError(message, { code, ...extra });
 const link = (name) => `https://t.me/addstickers/${name}`;
@@ -20,29 +20,25 @@ async function remember(userId, name, title, format) {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-// Uma única mensagem rica no chat confirma o resultado. A documentação do Bot API só dá prévia de link a
-// `editMessageText` (que edita mensagens "text, rich and game" e aceita `rich_message` junto de
-// `link_preview_options`); `sendRichMessage` não tem esse parâmetro. Por isso: envia e depois edita a
-// MESMA mensagem para acrescentar a prévia (continua sendo uma mensagem só). Se a edição falhar, a
-// mensagem já enviada (com o hiperlink) permanece. Nada aqui desfaz nem esconde o resultado.
+// Aviso no chat: o título em mensagem rica (H1) e, logo abaixo, o hiperlink do pacote numa mensagem de
+// texto comum. A prévia de link é opção de mensagens de texto (`sendMessage` + `link_preview_options`;
+// `sendRichMessage` não tem esse parâmetro), com a `url` explícita para o Telegram montar a prévia do pacote.
+// Cada envio é independente: se um falhar, o resultado do pacote não é desfeito (só vai para o log).
 async function avisarNoChat(userId, resultado) {
-  const rich_message = { html: avisoDoPacote(resultado) };
-  let enviada;
   try {
-    enviada = await api.sendRichMessage({ chat_id: userId, rich_message });
+    await api.sendRichMessage({ chat_id: userId, rich_message: { html: tituloDoAviso(resultado) } });
   } catch (e) {
-    console.warn('aviso no chat falhou:', (e && e.description) || String(e));
-    return;
+    console.warn('título do aviso falhou:', (e && e.description) || String(e));
   }
   try {
-    await api.editMessageText({
+    await api.sendMessage({
       chat_id: userId,
-      message_id: enviada.message_id,
-      rich_message,
+      text: linkDoPacote(resultado),
+      parse_mode: 'HTML',
       link_preview_options: previaDoPacote(resultado.link),
     });
   } catch (e) {
-    console.warn('prévia do link não aplicada:', (e && e.description) || String(e));
+    console.warn('link do pacote falhou:', (e && e.description) || String(e));
   }
 }
 
