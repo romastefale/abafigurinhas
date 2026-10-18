@@ -28,16 +28,26 @@ export default async function (input, ctx) {
     .all();
   const estados = await conferir(rows);
   const lista = [];
-  rows.forEach((p, i) => {
+  for (let i = 0; i < rows.length; i++) {
+    const p = rows[i];
     const e = estados[i];
-    if (e.status === 'unavailable') return;
+    if (e.status === 'unavailable') continue;
+    // o título é o que o Telegram devolve (StickerSet.title); se mudou, a linha acompanha
+    const title = e.status === 'ok' && e.title ? e.title : p.title;
+    if (title !== p.title) {
+      try {
+        await db.update(packs).set({ title }).where(eq(packs.id, p.id)).run();
+      } catch (err) {
+        console.warn('título não atualizado na lista:', p.name, (err && err.message) || String(err));
+      }
+    }
     lista.push({
       id: p.id,
       name: p.name,
-      title: p.title,
+      title,
       format: e.status === 'ok' ? e.format : p.format,
       full: e.status === 'ok' && e.full,
     });
-  });
+  }
   return lista;
 }

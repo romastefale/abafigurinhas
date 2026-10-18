@@ -14,14 +14,15 @@ export function formatoDoPacote(set, registrado) {
   return primeira.is_video ? 'video' : primeira.is_animated ? 'animated' : 'static';
 }
 
-// { status: 'ok', format, count, full }  o Telegram devolveu o pacote
+// { status: 'ok', format, count, full, title }  o Telegram (title = StickerSet.title, 1-64 caracteres) devolveu o pacote
 // { status: 'unavailable' }              o Bot API respondeu que não conseguiu (sem aviso de controle de fluxo)
 // { status: 'unknown' }                  limite de requisições ou sem resposta do Bot API: nada a afirmar
 export async function inspecionar(name, formatoRegistrado) {
   try {
     const set = await api.getStickerSet({ name });
     const count = Array.isArray(set.stickers) ? set.stickers.length : 0;
-    return { status: 'ok', format: formatoDoPacote(set, formatoRegistrado), count, full: count >= MAX_FIGURINHAS };
+    const title = typeof set.title === 'string' && set.title ? set.title : null;
+    return { status: 'ok', format: formatoDoPacote(set, formatoRegistrado), count, full: count >= MAX_FIGURINHAS, title };
   } catch (e) {
     if (e instanceof BotApiError && !(e.parameters && e.parameters.retry_after)) return { status: 'unavailable' };
     return { status: 'unknown' };

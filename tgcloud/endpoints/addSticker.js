@@ -56,7 +56,8 @@ async function adicionarAoPacote(userId, packId, kind, sticker) {
   if (formato !== kind.format) throw fail(`Esse pacote só aceita figurinhas ${NOME_DO_FORMATO[formato] || formato}.`, 'FORMAT_MISMATCH');
   if (estado.status === 'ok' && estado.full) throw fail(`Esse pacote já tem ${MAX_FIGURINHAS} figurinhas (o máximo).`, 'PACK_FULL');
   await api.addStickerToSet({ user_id: userId, name: pack.name, sticker: sticker() });
-  return { packId: pack.id, name: pack.name, title: pack.title, link: link(pack.name), created: false };
+  const title = estado.status === 'ok' && estado.title ? estado.title : pack.title;
+  return { packId: pack.id, name: pack.name, title, link: link(pack.name), created: false };
 }
 
 // Escolhe um nome que o Telegram ainda não devolve como pacote existente (sem olhar texto de erro).
