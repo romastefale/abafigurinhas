@@ -26,8 +26,18 @@ const swapWasm = {
   setup(b) {
     b.onResolve({ filter: /aac\.wasm\.js$/ }, (a) => (a.importer.includes('faad-shim') ? undefined : { path: path.join(here, 'faad-shim.js') }));
     b.onResolve({ filter: /^@audio\/decode-aac\/src\/aac\.wasm\.js$/ }, () => ({ path: path.join(here, 'node_modules/@audio/decode-aac/src/aac.wasm.js') }));
+    // o FAAD2 convertido vira um módulo à parte (vendor/faad.js): a plataforma limita cada módulo a 1 MiB
+    b.onResolve({ filter: /faad\.wasm2js\.js$/ }, () => ({ path: './faad.js', external: true }));
   },
 };
+await build({ ...common, entryPoints: [path.join(here, '.gen/faad.wasm2js.js')], outfile: path.join(out, 'faad.js'), minify: true });
 await build({ ...common, plugins: [stubNode, swapWasm], entryPoints: [path.join(here, 'aac-entry.js')], outfile: path.join(out, 'aac.js'), minify: true });
 await build({ ...common, entryPoints: [path.join(here, 'opus-entry.js')], outfile: path.join(out, 'opus.js'), minify: true });
 await build({ ...common, entryPoints: [path.join(here, 'resample-entry.js')], outfile: path.join(out, 'resample.js'), mainFields: ['module', 'main'] });
+
+// limite da plataforma: 'Module code is too long (max 1048576 bytes)'
+import fs from 'node:fs';
+for (const f of fs.readdirSync(out)) {
+  const size = fs.statSync(path.join(out, f)).size;
+  if (size > 1048576) throw new Error(`${f} tem ${size} bytes; o Serverless aceita no máximo 1048576 por módulo`);
+}
