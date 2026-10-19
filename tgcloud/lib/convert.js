@@ -1,8 +1,8 @@
 // /convert (Bot API: ForceReply + getFile + sendVoice). O bot pede o vídeo com um ForceReply, o que
 // dispensa guardar estado: o vídeo que chega como resposta a esse pedido é o que será convertido.
-// O áudio sai como mensagem de voz (sendVoice, M4A), sem título, para parecer um áudio nativo ao encaminhar.
+// O áudio sai como mensagem de voz (sendVoice, OGG/Opus), sem título, para parecer um áudio nativo ao encaminhar.
 import { api, InputFile, BotApiError } from 'sdk';
-import { extractM4a, M4aError } from './m4a.js';
+import { videoToVoice, Mp4Error } from './voice.js';
 
 export const MAX_SEGUNDOS = 120;
 const MAX_BYTES = 20 * 1024 * 1024;   // limite do getFile (documentação do Serverless)
@@ -46,16 +46,16 @@ export async function converter(chat_id, anexo) {
   }
   let resultado;
   try {
-    resultado = extractM4a(bytes);
+    resultado = await videoToVoice(bytes);
   } catch (e) {
-    if (!(e instanceof M4aError)) throw e;
+    if (!(e instanceof Mp4Error)) throw e;
     return e.message;
   }
   if (resultado.duration > MAX_SEGUNDOS + 1) return 'O áudio tem mais de 2 minutos. Envie um vídeo de até 2 minutos.';
   // sem caption: é só a mensagem de voz
   await api.sendVoice({
     chat_id,
-    voice: new InputFile(resultado.m4a, 'voice.m4a', { type: 'audio/mp4' }),
+    voice: new InputFile(resultado.ogg, 'voice.ogg', { type: 'audio/ogg' }),
     duration: Math.round(resultado.duration),
   });
   return null;

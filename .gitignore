@@ -1,2 +1,6 @@
 .tgcloud/
 node_modules/
+
+# gerador das bibliotecas de tgcloud/lib/vendor (não faz parte do deploy)
+vendor-src/node_modules/
+vendor-src/.gen/

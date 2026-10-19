@@ -1,0 +1,17 @@
+{
+  "name": "abaforobot-vendor",
+  "private": true,
+  "description": "Gera tgcloud/lib/vendor/*.js (decodificador AAC e codificador Opus em JavaScript puro). Não faz parte do deploy.",
+  "scripts": {
+    "build": "node faad-wasm2js.mjs && node build.mjs"
+  },
+  "dependencies": {
+    "@audio/decode-aac": "1.6.0",
+    "binaryen": "132.0.0",
+    "opusscript": "0.1.1",
+    "wave-resampler": "1.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}
