@@ -37,6 +37,8 @@ export async function pedirVideo(chat_id) {
 export async function converter(chat_id, anexo) {
   if (anexo.duration && anexo.duration > MAX_SEGUNDOS) return 'O vídeo tem mais de 2 minutos. Envie um vídeo de até 2 minutos.';
   if (anexo.file_size && anexo.file_size > MAX_BYTES) return 'O arquivo passa de 20 MB, o máximo que o bot consegue baixar. Envie um vídeo menor.';
+  // indicador nativo do Telegram enquanto converte (some sozinho em até 5 s ou quando a voz chega)
+  await api.sendChatAction({ chat_id, action: 'upload_voice' }).catch(() => {});
   let bytes;
   try {
     bytes = await api.getFileContent(anexo.file_id);
