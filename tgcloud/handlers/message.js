@@ -5,7 +5,7 @@
 import { api, BotApiError } from 'sdk';
 import { MINI_APP_URL } from '../lib/config.js';
 import { esc } from '../lib/rich.js';
-import { ehComandoConvert, anexoDeVideo, pedirVideo, aguardandoVideo, converter } from '../lib/convert.js';
+import { ehComandoConvert, anexoDeVideo, respondeAoPedido, pedirVideo, converter } from '../lib/convert.js';
 
 const TEXTO = 'Transforme imagens e vídeos em figurinhas. Abra o app, escolha o arquivo e adicione ao seu pacote.';
 
@@ -19,16 +19,14 @@ function boasVindas() {
 export default async function (message) {
   if (message.chat.type !== 'private') return;
   const chat_id = message.chat.id;
-  const userId = message.from && message.from.id;
 
-  if (userId && ehComandoConvert(message)) {
-    await pedirVideo(userId);
-    await api.sendMessage({ chat_id, text: 'Envie o vídeo (até 2 minutos) que você quer transformar em áudio.' });
+  if (ehComandoConvert(message)) {
+    await pedirVideo(chat_id);
     return;
   }
   const anexo = anexoDeVideo(message);
-  if (userId && anexo && await aguardandoVideo(userId)) {
-    const erro = await converter(chat_id, userId, anexo);
+  if (anexo && respondeAoPedido(message)) {
+    const erro = await converter(chat_id, anexo);
     if (erro) await api.sendMessage({ chat_id, text: erro });
     return;
   }
