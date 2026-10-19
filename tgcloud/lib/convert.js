@@ -38,7 +38,8 @@ export async function converter(chat_id, anexo) {
   if (anexo.duration && anexo.duration > MAX_SEGUNDOS) return 'O vídeo tem mais de 2 minutos. Envie um vídeo de até 2 minutos.';
   if (anexo.file_size && anexo.file_size > MAX_BYTES) return 'O arquivo passa de 20 MB, o máximo que o bot consegue baixar. Envie um vídeo menor.';
   // indicador nativo do Telegram enquanto converte (some sozinho em até 5 s ou quando a voz chega)
-  await api.sendChatAction({ chat_id, action: 'upload_voice' }).catch(() => {});
+  // o indicador é só visual: se falhar, a conversão segue, mas o motivo fica no log
+  await api.sendChatAction({ chat_id, action: 'upload_voice' }).catch((e) => console.warn('sendChatAction falhou:', e && e.description));
   let bytes;
   try {
     bytes = await api.getFileContent(anexo.file_id);
@@ -48,12 +49,11 @@ export async function converter(chat_id, anexo) {
   }
   let resultado;
   try {
-    resultado = await videoToVoice(bytes);
+    resultado = await videoToVoice(bytes, { maxSeconds: MAX_SEGUNDOS + 1 });
   } catch (e) {
     if (!(e instanceof Mp4Error)) throw e;
     return e.message;
   }
-  if (resultado.duration > MAX_SEGUNDOS + 1) return 'O áudio tem mais de 2 minutos. Envie um vídeo de até 2 minutos.';
   // sem caption: é só a mensagem de voz
   await api.sendVoice({
     chat_id,

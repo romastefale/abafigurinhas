@@ -70,7 +70,7 @@ export function readAacTrack(bytes) {
     return ler(bytes);
   } catch (e) {
     // arquivo truncado ou corrompido: a leitura passa do fim e o DataView lança RangeError
-    if (e instanceof RangeError) throw new Mp4Error('O arquivo de vídeo está corrompido ou incompleto.');
+    if (e instanceof RangeError) throw new Mp4Error(`O arquivo de vídeo está corrompido ou incompleto (${e.message}).`);
     throw e;
   }
 }
@@ -106,12 +106,14 @@ function ler(bytes) {
   const channels = view.getUint16(entry + 8 + 16);
   const sampleRate = view.getUint32(entry + 8 + 24) >>> 16;
   const entryEnd = entry + view.getUint32(entry);
-  // o esds fica logo após a entrada de amostra (MP4) ou dentro de um 'wave' (QuickTime): procura pela etiqueta
-  let esdsAt = -1;
-  for (let i = entry + 36; i + 8 <= entryEnd; i++) {
-    if (fourcc(view, i) === 'esds') { esdsAt = i - 4; break; }
-  }
-  const esds = need(esdsAt < 0 ? null : { start: esdsAt, size: view.getUint32(esdsAt), hdr: 8 }, 'a configuração do AAC');
+  // campos fixos da entrada de som (QuickTime File Format, "Sound sample descriptions"; em MP4 é a versão 0):
+  // as caixas filhas começam em 36 bytes (v0), 52 (v1) ou 72 (v2); o esds fica ali ou dentro de 'wave'
+  const version = view.getUint16(entry + 16);
+  const childStart = entry + ({ 0: 36, 1: 52, 2: 72 })[version];
+  if (Number.isNaN(childStart)) throw new Mp4Error('Esse formato de áudio não é suportado.');
+  const children = boxes(view, childStart, entryEnd);
+  const wave = find(children, 'wave');
+  const esds = need(find(children, 'esds') || (wave && find(kids(view, wave), 'esds')), 'a configuração do AAC');
   const asc = parseEsds(bytes, esds, esds.hdr);
 
   const stsz = need(find(sk, 'stsz'), 'os tamanhos das amostras');

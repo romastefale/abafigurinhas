@@ -13,15 +13,16 @@ export { Mp4Error };
 
 const BITRATE = 96000;
 
-// Devolve { ogg: Uint8Array, duration: segundos } ou lança Mp4Error.
-export async function videoToVoice(bytes) {
+// Devolve { ogg: Uint8Array, duration: segundos } ou lança Mp4Error. maxSeconds é conferido antes de decodificar.
+export async function videoToVoice(bytes, { maxSeconds = Infinity } = {}) {
   const track = readAacTrack(bytes);
+  if (track.duration > maxSeconds) throw new Mp4Error(`O vídeo tem mais de ${Math.round(maxSeconds / 60)} minutos. Envie um vídeo de até ${Math.round(maxSeconds / 60)} minutos.`);
   let dec;
   try {
     dec = await decoder({ asc: track.asc });
   } catch (e) {
-    console.warn('decodificador AAC recusou a configuração:', e && e.message);
-    throw new Mp4Error('Não consegui ler o áudio desse vídeo.');
+    console.warn('decodificador AAC recusou a configuração:', e);
+    throw new Mp4Error(`Não consegui ler o áudio desse vídeo (${(e && e.message) || e}).`);
   }
   const planes = [];   // um bloco por quadro: { channelData: Float32Array[], sampleRate }
   let rate = 0;
@@ -35,8 +36,8 @@ export async function videoToVoice(bytes) {
       total += out.channelData[0].length;
     }
   } catch (e) {
-    console.warn('falha ao decodificar um quadro AAC:', e && e.message);
-    throw new Mp4Error('Não consegui decodificar o áudio desse vídeo.');
+    console.warn('falha ao decodificar um quadro AAC:', e);
+    throw new Mp4Error(`Não consegui decodificar o áudio desse vídeo (${(e && e.message) || e}).`);
   } finally {
     dec.free();
   }
