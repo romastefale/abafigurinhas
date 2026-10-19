@@ -46,7 +46,7 @@ Ao digitar o nome de um pacote, o app esconde o título, a prévia e o seletor, 
 
 - Vídeo depende de WebCodecs com VP9 no WebView do Telegram. O app detecta e avisa quando o aparelho não suporta (imagens continuam funcionando).
 - Entrada de vídeo depende do que o aparelho decodifica (MP4/H.264 e MOV costumam funcionar em celulares). `.gif` puro não é lido; envie como vídeo.
-- Sem conversão de vídeo em áudio (não há como encodar Opus de forma confiável no WebView).
+- `/convert` (chat): extrai a faixa AAC do vídeo (MP4/MOV, até 2 min e 20 MB) sem recodificar, empacota como M4A e envia com `sendVoice`. Não aceita vídeo fragmentado nem áudio que não seja AAC. Rode `npx tgcloud migrate` para criar a tabela `convert_pending`.
 - A lista de pacotes vem da tabela `packs` (só os criados pelo app) e é conferida no Telegram a cada abertura com `getStickerSet`: pacotes que o Bot API não devolve ficam fora da lista (nada é apagado da tabela), o formato mostrado é o real (`is_video`/`is_animated`) e pacotes com 120 figurinhas aparecem desabilitados como "(cheio)". Nenhuma dessas decisões depende do texto de um erro, que a documentação não garante.
 - O app só enxerga os pacotes criados por ele. Pacotes de versões anteriores do bot não aparecem e não há como adicioná-los por link.
 - A prévia do link usa o que o Bot API documenta: `sendMessage` com `link_preview_options` (`url` explícita do pacote e `prefer_large_media`). `sendRichMessage` não tem esse parâmetro, por isso o hiperlink vai numa mensagem de texto, abaixo do título em H1. O Telegram pode mostrar o aviso "Abrir este link?" ao tocar num link embutido.
