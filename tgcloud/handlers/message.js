@@ -26,7 +26,14 @@ export default async function (message) {
   }
   const anexo = anexoDeVideo(message);
   if (anexo && respondeAoPedido(message)) {
-    const erro = await converter(chat_id, anexo);
+    let erro;
+    try {
+      erro = await converter(chat_id, anexo);
+    } catch (e) {
+      // erro inesperado: o usuário recebe o motivo em vez de silêncio
+      console.error('/convert falhou:', e);
+      erro = `Não consegui converter esse vídeo (${(e && e.name) || 'Erro'}: ${(e && (e.description || e.message)) || e}).`;
+    }
     if (erro) await api.sendMessage({ chat_id, text: erro });
     return;
   }
