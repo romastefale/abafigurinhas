@@ -11,9 +11,3 @@ export const packs = table('packs', {
 }, (t) => ({
   userNameIdx: uniqueIndex('uidx_packs_user_name').on(t.userId, t.name),
 }));
-
-// Usuários que mandaram /convert e ainda não enviaram o vídeo.
-export const convertPending = table('convert_pending', {
-  userId:  integer('user_id').primaryKey(),
-  created: integer('created_at').notNull(),   // unix, em segundos
-});
