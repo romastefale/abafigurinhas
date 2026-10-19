@@ -30,6 +30,21 @@ function boxes(view, start, end) {
 const find = (list, type) => list.find((b) => b.type === type);
 const kids = (view, b) => boxes(view, b.start + b.hdr, b.start + b.size);
 
+// 'mp4a' também serve para MP3 e outros; o tipo de objeto no esds (0x40) distingue o AAC.
+function isAac(bytes, view, stsd) {
+  const end = stsd.start + stsd.size;
+  for (let i = stsd.start; i + 8 < end; i++) {
+    if (fourcc(view, i) !== 'esds') continue;
+    for (let j = i + 8; j + 2 < end && j < i + 64; j++) {
+      if (bytes[j] !== 0x04) continue;   // DecoderConfigDescriptor
+      let k = j + 1;
+      while (k < end && (bytes[k] & 0x80)) k++;   // comprimento em formato variável
+      return bytes[k + 1] === 0x40;
+    }
+  }
+  return false;
+}
+
 function need(box, what) {
   if (!box) throw new M4aError(`Não encontrei ${what} no vídeo.`);
   return box;
@@ -37,6 +52,16 @@ function need(box, what) {
 
 // Devolve { m4a: Uint8Array, duration: segundos } ou lança M4aError.
 export function extractM4a(bytes) {
+  try {
+    return extrair(bytes);
+  } catch (e) {
+    // arquivo truncado ou corrompido: a leitura passa do fim e o DataView lança RangeError
+    if (e instanceof RangeError) throw new M4aError('O arquivo de vídeo está corrompido ou incompleto.');
+    throw e;
+  }
+}
+
+function extrair(bytes) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const top = boxes(view, 0, bytes.length);
   const moov = need(find(top, 'moov'), 'os metadados (moov)');
@@ -65,7 +90,9 @@ export function extractM4a(bytes) {
   const stbl = need(find(kids(view, minf), 'stbl'), 'a tabela de amostras');
   const sk = kids(view, stbl);
   const stsd = need(find(sk, 'stsd'), 'a descrição do áudio');
-  if (fourcc(view, stsd.start + stsd.hdr + 8 + 4) !== 'mp4a') throw new M4aError('O áudio desse vídeo não é AAC.');
+  if (fourcc(view, stsd.start + stsd.hdr + 8 + 4) !== 'mp4a' || !isAac(bytes, view, stsd)) {
+    throw new M4aError('O áudio desse vídeo não é AAC.');
+  }
   const stsz = need(find(sk, 'stsz'), 'os tamanhos das amostras');
   const stsc = need(find(sk, 'stsc'), 'o mapa de blocos');
   const stco = find(sk, 'stco');

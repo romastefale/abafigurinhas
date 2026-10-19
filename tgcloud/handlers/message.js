@@ -1,4 +1,5 @@
-// Toda a conversão acontece no Mini App; o chat só leva o usuário até ele.
+// Figurinhas: a conversão acontece no Mini App; o chat só leva o usuário até ele.
+// /convert: vídeo de até 2 minutos vira mensagem de voz, tudo dentro do chat (lib/convert.js).
 // Boas-vindas como mensagem rica (sendRichMessage, Bot API 10.1) com um botão verde (Bot API 10.3)
 // que abre o Mini App. A tag e os atributos seguem a seção "Rich HTML style" da documentação.
 import { api, BotApiError } from 'sdk';
