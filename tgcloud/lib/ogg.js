@@ -67,14 +67,23 @@ export function oggOpus(packets, { preSkip, totalSamples, sampleRate }) {
     page([head], { type: 0x02, granule: 0, serial, seq: 0 }),
     page([tags], { type: 0, granule: 0, serial, seq: 1 }),
   ];
-  const PER_PAGE = 50;                // 1 s por página
+  // até ~1 s por página, sem passar de 255 valores de lacing (limite do formato Ogg); um pacote Opus tem no
+  // máximo 1275 bytes (6 valores), então cada pacote sempre cabe inteiro numa página
+  const lacingOf = (p) => Math.floor(p.length / 255) + 1;
   let seq = 2;
-  for (let i = 0; i < packets.length; i += PER_PAGE) {
-    const group = packets.slice(i, i + PER_PAGE);
-    const last = i + PER_PAGE >= packets.length;
-    const granule = last ? totalSamples + preSkip : (i + group.length) * 960;
-    pages.push(page(group, { type: last ? 0x04 : 0, granule, serial, seq: seq++ }));
+  let group = [];
+  let segs = 0;
+  for (let i = 0; i < packets.length; i++) {
+    const n = lacingOf(packets[i]);
+    if (group.length && (segs + n > 255 || group.length === 50)) {
+      pages.push(page(group, { type: 0, granule: i * 960, serial, seq: seq++ }));
+      group = [];
+      segs = 0;
+    }
+    group.push(packets[i]);
+    segs += n;
   }
+  pages.push(page(group, { type: 0x04, granule: totalSamples + preSkip, serial, seq: seq++ }));
   const size = pages.reduce((a, p) => a + p.length, 0);
   const out = new Uint8Array(size);
   let o = 0;
