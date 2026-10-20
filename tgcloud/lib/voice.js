@@ -12,6 +12,12 @@ import { oggOpus } from './ogg.js';
 export { Mp4Error };
 
 const BITRATE = 96000;
+// O Serverless interrompe a execução após ~3 s de CPU (medido com tgcloud run: "CPU timer exceeded").
+// Medidas na plataforma, em CPU por segundo de áudio: Opus complexidade 10 ≈ 39 ms, 5 ≈ 20 ms, 2 ≈ 8 ms;
+// reamostragem sinc com LPF ≈ 21 ms, cúbica sem LPF ≈ 2 ms. Ao subir de 44,1 para 48 kHz o LPF não altera o
+// resultado, e a cúbica fica muito acima do ruído do próprio Opus (scripts/diag-cpu.mjs).
+const COMPLEXITY = 2;
+const RESAMPLE = { method: 'cubic', LPF: false };
 
 // Devolve { ogg: Uint8Array, duration: segundos } ou lança Mp4Error. maxSeconds é conferido antes de decodificar.
 export async function videoToVoice(bytes, { maxSeconds = Infinity } = {}) {
@@ -45,9 +51,9 @@ export async function videoToVoice(bytes, { maxSeconds = Infinity } = {}) {
 
   const mono = downmixPlanar(planes, total);
   // o libopus só aceita 8/12/16/24/48 kHz; a referência (Xiph) é reamostrar antes de codificar
-  const at48 = rate === 48000 ? mono : resample(mono, rate, 48000, { method: 'sinc', LPF: true });
+  const at48 = rate === 48000 ? mono : resample(mono, rate, 48000, RESAMPLE);
   const pcm48 = toInt16(at48);
-  const { packets, preSkip } = encodeOpus(pcm48, { bitrate: BITRATE });
+  const { packets, preSkip } = encodeOpus(pcm48, { bitrate: BITRATE, complexity: COMPLEXITY });
   const ogg = oggOpus(packets, { preSkip, totalSamples: pcm48.length, sampleRate: rate });
   return { ogg, duration: pcm48.length / 48000 };
 }

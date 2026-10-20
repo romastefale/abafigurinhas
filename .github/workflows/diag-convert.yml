@@ -30,3 +30,4 @@ jobs:
         run: node scripts/diag-convert.mjs
       - name: Medir CPU por etapa e WebAssembly na plataforma
         run: node scripts/diag-cpu.mjs
+        if: false
