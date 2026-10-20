@@ -7,9 +7,11 @@ if (typeof Buffer === 'undefined') globalThis.Buffer = { from: (a) => Uint8Array
 const FRAME = 960;   // 20 ms a 48 kHz
 
 // PCM Int16 mono 48 kHz -> pacotes Opus de 20 ms. Devolve { packets: Uint8Array[], preSkip }.
-export function encodeOpus(pcm, { bitrate = 96000 } = {}) {
+// complexity: OPUS_SET_COMPLEXITY (0 a 10; o padrão do libopus é 10). Menor = menos CPU.
+export function encodeOpus(pcm, { bitrate = 96000, complexity = 10 } = {}) {
   const enc = new OpusScript(48000, 1, OpusScript.Application.AUDIO, { wasm: false });
   enc.setBitrate(bitrate);
+  enc.encoderCTL(4010, complexity);
   const packets = [];
   const frame = new Int16Array(FRAME);
   for (let off = 0; off < pcm.length; off += FRAME) {

@@ -26,4 +26,7 @@ jobs:
       - name: Sincronizar estado da nuvem
         run: npm run fetch
       - name: Converter na plataforma
+        continue-on-error: true
         run: node scripts/diag-convert.mjs
+      - name: Medir CPU por etapa e WebAssembly na plataforma
+        run: node scripts/diag-cpu.mjs
