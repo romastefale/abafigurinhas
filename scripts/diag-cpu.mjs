@@ -1,5 +1,7 @@
 // Mede, na plataforma (tgcloud run), o que cabe no limite de CPU por execução: se há WebAssembly e quantas
 // repetições de cada etapa (10 s de áudio estéreo 44,1 kHz) terminam antes de "CPU timer exceeded".
+// Usado para escolher a complexidade do Opus e a reamostragem (lib/voice.js). Para repetir, troque o último
+// passo de .github/workflows/diag-convert.yml por `node scripts/diag-cpu.mjs` e dispare o workflow.
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
