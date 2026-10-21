@@ -6,6 +6,7 @@ import { api, BotApiError } from 'sdk';
 import { MINI_APP_URL } from '../lib/config.js';
 import { esc } from '../lib/rich.js';
 import { ehComandoConvert, anexoDeVideo, respondeAoPedido, pedirVideo, converter } from '../lib/convert.js';
+import { pacoteDaMensagem, registrarPacote } from '../lib/registrar.js';
 
 const TEXTO = 'Transforme imagens e vídeos em figurinhas. Abra o app, escolha o arquivo e adicione ao seu pacote.';
 
@@ -35,6 +36,13 @@ export default async function (message) {
       erro = `Não consegui converter esse vídeo (${(e && e.name) || 'Erro'}: ${(e && (e.description || e.message)) || e}).`;
     }
     if (erro) await api.sendMessage({ chat_id, text: erro });
+    return;
+  }
+
+  // figurinha de um pacote do bot, ou link t.me/addstickers/…: o pacote volta para a lista do app
+  const pacote = pacoteDaMensagem(message);
+  if (pacote && message.from) {
+    await api.sendMessage({ chat_id, text: await registrarPacote(message.from.id, pacote) });
     return;
   }
 
