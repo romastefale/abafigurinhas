@@ -11,7 +11,7 @@ async function conferir(rows) {
   const trabalhador = async () => {
     while (proximo < rows.length) {
       const i = proximo++;
-      estados[i] = await inspecionar(rows[i].name, rows[i].format);
+      estados[i] = await inspecionar(rows[i].name);
     }
   };
   await Promise.all(Array.from({ length: Math.min(SIMULTANEAS, rows.length) }, trabalhador));
@@ -45,7 +45,6 @@ export default async function (input, ctx) {
       id: p.id,
       name: p.name,
       title,
-      format: e.status === 'ok' ? e.format : p.format,
       full: e.status === 'ok' && e.full,
     });
   }

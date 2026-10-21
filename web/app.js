@@ -147,13 +147,13 @@ async function prepararDestino() {
     pacotes = [];
     if (e?.type === "UNAUTHORIZED") throw new ErroDeConversao("Abra este app pelo Telegram.");
   }
-  const compativeis = pacotes.filter((p) => p.format === figurinha.tipo);
   const sel = $("#destino");
   sel.replaceChildren();
   const opcao = (valor, texto, extra = {}) =>
     sel.append(Object.assign(document.createElement("option"), { value: valor, textContent: texto }, extra));
   opcao("", "Adicionar ao pacote…", { disabled: true, hidden: true });
-  for (const p of compativeis) opcao(String(p.id), p.full ? `${p.title} (cheio)` : p.title, { disabled: !!p.full });
+  // o formato é de cada figurinha (InputSticker.format), não do pacote: todos os pacotes aceitam qualquer formato
+  for (const p of pacotes) opcao(String(p.id), p.full ? `${p.title} (cheio)` : p.title, { disabled: !!p.full });
   opcao(NOVO, "+ Novo pacote…");
   mostrarLista();
 }

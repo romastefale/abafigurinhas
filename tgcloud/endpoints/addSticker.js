@@ -42,18 +42,14 @@ async function avisarNoChat(userId, resultado) {
   }
 }
 
-const NOME_DO_FORMATO = { static: 'de imagem', video: 'de vídeo', animated: 'animadas (TGS)' };
-
 async function adicionarAoPacote(userId, packId, kind, sticker) {
   if (!Number.isInteger(packId)) throw fail('Pacote inválido.', 'BAD_PACK');
   const pack = await db.select().from(packs)
     .where(and(eq(packs.id, packId), eq(packs.userId, userId))).get();
   if (!pack) throw fail('Pacote não encontrado.', 'BAD_PACK');
   // o estado vem do Telegram (getStickerSet), não do que foi registrado na criação
-  const estado = await inspecionar(pack.name, pack.format);
+  const estado = await inspecionar(pack.name);
   if (estado.status === 'unavailable') throw fail('O Telegram não devolveu esse pacote agora. Ele pode ter sido apagado.', 'PACK_UNAVAILABLE');
-  const formato = estado.status === 'ok' ? estado.format : pack.format;
-  if (formato !== kind.format) throw fail(`Esse pacote só aceita figurinhas ${NOME_DO_FORMATO[formato] || formato}.`, 'FORMAT_MISMATCH');
   if (estado.status === 'ok' && estado.full) throw fail(`Esse pacote já tem ${MAX_FIGURINHAS} figurinhas (o máximo).`, 'PACK_FULL');
   await api.addStickerToSet({ user_id: userId, name: pack.name, sticker: sticker() });
   const title = estado.status === 'ok' && estado.title ? estado.title : pack.title;
@@ -64,7 +60,7 @@ async function adicionarAoPacote(userId, packId, kind, sticker) {
 async function nomeLivre(title, username) {
   for (let tentativa = 0; tentativa < 3; tentativa++) {
     const name = newPackName(title, username);
-    if ((await inspecionar(name, 'static')).status !== 'ok') return name;
+    if ((await inspecionar(name)).status !== 'ok') return name;
   }
   throw fail('Não consegui um nome livre para o pacote. Tente outro nome.', 'NAME_TAKEN');
 }
