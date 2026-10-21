@@ -26,4 +26,4 @@ jobs:
       - name: Sincronizar estado da nuvem
         run: npm run fetch
       - name: Converter na plataforma
-        run: node scripts/diag-getpacks.mjs
+        run: node scripts/diag-convert.mjs
